@@ -1,53 +1,112 @@
-# Getting Started with Create React App
+# Glossify - Language Learning App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A Progressive Web App (PWA) for learning languages through flashcards. Practice Swedish with English, German, or Spanish.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- 🎯 **Flashcard Practice** - Learn vocabulary with interactive flashcards
+- 🔐 **User Authentication** - Secure login with Supabase Auth
+- 💾 **Cloud Sync** - Your word lists sync across all devices
+- ⚙️ **Customizable Settings**:
+  - Language selection (English, German, Spanish)
+  - Practice direction (Swedish→Target or Target→Swedish)
+  - Sound effects toggle
+  - Case sensitivity toggle
+- 📱 **PWA Support** - Install on mobile/desktop for offline access
+- 🎨 **Modern UI** - Clean, responsive design
 
-### `npm start`
+## Getting Started
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Prerequisites
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- Node.js (v14 or higher)
+- Supabase account
 
-### `npm test`
+### Installation
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. Clone the repository
+2. Install dependencies:
+```bash
+npm install
+```
 
-### `npm run build`
+3. Create a `.env` file in the root directory:
+```env
+REACT_APP_SUPABASE_URL=your_supabase_url
+REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+4. Set up Supabase database by running these SQL scripts in order:
+   - `supabase-auth-setup.sql` - Authentication tables and RLS
+   - `supabase-settings-setup.sql` - User settings table
+   - `supabase-direction-migration.sql` - Direction column
+   - `supabase-case-sensitive-migration.sql` - Case sensitivity column
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+5. Start the development server:
+```bash
+npm start
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Building for Production
 
-### `npm run eject`
+```bash
+npm run build
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+The build folder will contain the optimized production build.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## PWA Installation
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Desktop (Chrome/Edge)
+1. Visit the deployed app
+2. Click the install icon in the address bar
+3. Or use the "Installera" prompt that appears
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Mobile (iOS)
+1. Open in Safari
+2. Tap the Share button
+3. Scroll down and tap "Add to Home Screen"
 
-## Learn More
+### Mobile (Android)
+1. Open in Chrome
+2. Tap the menu (⋮)
+3. Tap "Install app" or "Add to Home Screen"
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Offline Support
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The app uses a service worker to cache assets for offline use:
+- Static assets are cached on first visit
+- API calls use a network-first strategy with cache fallback
+- The app will work offline after the first visit
 
-### Code Splitting
+## Database Schema
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### `word_lists` table
+- `id` - UUID primary key
+- `user_id` - UUID foreign key to auth.users
+- `name` - Text (weeklyWords, allWords, verbs)
+- `words` - JSONB array of {sv, ty} objects
+- `created_at`, `updated_at` - Timestamps
+
+### `user_settings` table
+- `user_id` - UUID primary key, foreign key to auth.users
+- `target_language` - Text (en, de, es)
+- `direction` - Text (sv-target, target-sv)
+- `sound_enabled` - Boolean
+- `case_sensitive` - Boolean
+- `updated_at` - Timestamp
+
+## Technologies
+
+- **React 19** - UI framework
+- **Supabase** - Backend (Auth + PostgreSQL)
+- **Service Workers** - Offline support
+- **Web Audio API** - Sound effects
+- **CSS3** - Animations and gradients
+
+## License
+
+MIT
 
 ### Analyzing the Bundle Size
 
