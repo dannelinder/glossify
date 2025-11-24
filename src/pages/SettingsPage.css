@@ -1,12 +1,20 @@
+/* Make all h1 and p elements white for consistency */
+h3 {
+  color: #00d4ff !important;
+}
+h1, p {
+  color: #fff !important;
+}
 .settings-container {
   max-width: 700px;
   margin: 40px auto;
   padding: 24px;
   min-height: 100vh;
+  background: #112D54;
 }
 
 .settings-card {
-  background: rgba(255, 255, 255, 0.95);
+  background: #112D54;
   border-radius: 20px;
   padding: 40px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -16,6 +24,10 @@
   font-size: 2.5rem;
   margin-bottom: 32px;
   color: #00d4ff;
+  text-align: center;
+}
+
+.settings-card h2 {
   text-align: center;
 }
 
@@ -32,7 +44,6 @@
 .settings-section h3 {
   font-size: 1.5rem;
   margin-bottom: 8px;
-  color: #667eea;
 }
 
 .settings-description {
@@ -43,35 +54,44 @@
 
 .language-options {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex-direction: row;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 12px;
 }
 
 .language-option {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 2px solid rgba(102, 126, 234, 0.2);
-  border-radius: 12px;
+  padding: 22px 45px;
+  background: rgba(0, 212, 255, 0.15);
+  border: 2px solid rgba(0, 212, 255, 0.3);
+  border-radius: 30px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 1.1rem;
-  text-align: left;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #00d4ff;
+  text-align: center;
+  min-width: 160px;
+  justify-content: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .language-option:hover {
-  background: rgba(102, 126, 234, 0.1);
-  border-color: rgba(102, 126, 234, 0.4);
+  background: rgba(0, 212, 255, 0.25);
+  border: 2px solid rgba(0, 212, 255, 0.5);
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
 }
 
 .language-option.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
-  color: white;
-  font-weight: 600;
+  background: #112D54;
+  border: 2px solid #00d4ff;
+  color: #00d4ff;
+  font-weight: 700;
+  box-shadow: 0 0 0 2px #00d4ff33;
 }
 
 .language-option .flag {
@@ -116,7 +136,7 @@
 }
 
 .toggle-switch input:checked + .slider {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #00d4ff;
 }
 
 .toggle-switch input:checked + .slider::before {
@@ -159,8 +179,8 @@
 .save-button {
   width: 280px;
   padding: 16px 32px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #00d4ff;
+  color: #112D54;
   border: none;
   border-radius: 12px;
   font-size: 1.1rem;

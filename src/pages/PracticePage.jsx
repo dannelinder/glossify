@@ -202,7 +202,16 @@ if (loading) {
 }
 
 return (
-    <div style={{ maxWidth: 700, margin: '0 auto', padding: 24, minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+    <div style={{
+      maxWidth: 700,
+      margin: '0 auto',
+      padding: 24,
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      background: '#112D54'
+    }}>
       {/* Sign out button */}
       <div style={{ position: 'absolute', top: 20, right: 20 }}>
         <button 
@@ -237,7 +246,7 @@ return (
             Välj din övning och börja plugga!
           </p>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', marginTop: 0 }}>
             <button 
               onClick={() => startWithList(wordLists.weekly)}
               style={{ 
@@ -270,8 +279,8 @@ return (
             </button>
             <button 
               onClick={() => startWithList(wordLists.all)}
-              style={{ 
-                width: '340px', 
+              style={{
+                width: '340px',
                 fontSize: '1.5rem',
                 padding: '22px 45px',
                 borderRadius: '30px',
@@ -284,16 +293,14 @@ return (
                 textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(30, 144, 255, 0.25)'
-                e.currentTarget.style.border = '2px solid rgba(30, 144, 255, 0.5)'
-                e.currentTarget.style.color = '#1e90ff'
+                e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
+                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
                 e.currentTarget.style.transform = 'translateY(-2px)'
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(30, 144, 255, 0.4)'
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
                 e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
-                e.currentTarget.style.color = '#00d4ff'
                 e.currentTarget.style.transform = 'translateY(0)'
                 e.currentTarget.style.boxShadow = 'none'
               }}
@@ -302,8 +309,8 @@ return (
             </button>
             <button 
               onClick={() => startWithList(wordLists.verbs)}
-              style={{ 
-                width: '340px', 
+              style={{
+                width: '340px',
                 fontSize: '1.5rem',
                 padding: '22px 45px',
                 borderRadius: '30px',
@@ -316,71 +323,76 @@ return (
                 textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 255, 204, 0.25)'
-                e.currentTarget.style.border = '2px solid rgba(0, 255, 204, 0.5)'
-                e.currentTarget.style.color = '#00ffcc'
+                e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
+                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
                 e.currentTarget.style.transform = 'translateY(-2px)'
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 255, 204, 0.4)'
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
                 e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
-                e.currentTarget.style.color = '#00d4ff'
                 e.currentTarget.style.transform = 'translateY(0)'
                 e.currentTarget.style.boxShadow = 'none'
               }}
             >
               Verb
             </button>
-          </div>
-          
-          <div style={{ marginTop: 40, display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button 
               onClick={() => { if (soundEnabled) playSound('click'); setShowManage(true); }}
-              style={{ 
-                padding: '14px 32px', 
-                fontSize: '1.1rem', 
+              style={{
+                width: '340px',
+                fontSize: '1.5rem',
+                padding: '22px 45px',
+                borderRadius: '30px',
                 background: 'rgba(0, 212, 255, 0.15)',
                 color: '#00d4ff',
-                borderRadius: '16px',
-                fontWeight: '600',
-                backdropFilter: 'blur(10px)',
                 border: '2px solid rgba(0, 212, 255, 0.3)',
+                fontWeight: '700',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
+                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
                 e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
+                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
                 e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
               }}
             >
               Hantera glosor
             </button>
             <button 
               onClick={() => { if (soundEnabled) playSound('click'); setShowSettings(true); }}
-              style={{ 
-                padding: '14px 32px', 
-                fontSize: '1.1rem', 
-                background: 'rgba(118, 75, 162, 0.15)',
-                color: '#764ba2',
-                borderRadius: '16px',
-                fontWeight: '600',
-                backdropFilter: 'blur(10px)',
-                border: '2px solid rgba(118, 75, 162, 0.3)',
+              style={{
+                width: '340px',
+                fontSize: '1.5rem',
+                padding: '22px 45px',
+                borderRadius: '30px',
+                background: 'rgba(0, 212, 255, 0.15)',
+                color: '#00d4ff',
+                border: '2px solid rgba(0, 212, 255, 0.3)',
+                fontWeight: '700',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(118, 75, 162, 0.25)'
+                e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
+                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
                 e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(118, 75, 162, 0.15)'
+                e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
+                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
                 e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
               }}
             >
               Inställningar
@@ -549,17 +561,32 @@ return (
               </div>
 
               <div style={{ marginTop: 24, textAlign: 'center' }}>
-                <button 
+                <button
                   onClick={() => { playSound('click'); setHasStarted(false); }}
-                  style={{ 
-                    padding: '12px 28px',
+                  style={{
+                    width: '100%',
+                    fontSize: '1.3rem',
+                    padding: '18px 40px',
+                    borderRadius: '30px',
                     background: 'rgba(0, 212, 255, 0.15)',
                     color: '#00d4ff',
-                    borderRadius: '16px',
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    backdropFilter: 'blur(10px)',
-                    border: '2px solid rgba(0, 212, 255, 0.3)'
+                    border: '2px solid rgba(0, 212, 255, 0.3)',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
+                    e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
+                    e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = 'none'
                   }}
                 >
                   Avsluta övning

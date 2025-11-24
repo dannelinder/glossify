@@ -1,3 +1,13 @@
+/* Global heading and paragraph color styles */
+h1 {
+  color: #fff !important;
+}
+h3 {
+  color: #00d4ff !important;
+}
+p {
+  color: #fff !important;
+}
 .App {
   text-align: center;
   min-height: 100vh;
@@ -30,7 +40,7 @@
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.95);
+  background: #112D54;
   border-radius: 20px;
   padding: 32px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
