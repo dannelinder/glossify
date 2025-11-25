@@ -159,62 +159,14 @@ export default function SettingsPage({ onBack }) {
 
         <div className="settings-actions" style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', marginTop: 0 }}>
           <button
+            className="modern-button main-action-button"
             onClick={saveSettings}
-            style={{
-              width: '100%',
-              fontSize: '1.3rem',
-              padding: '18px 40px',
-              borderRadius: '30px',
-              background: 'rgba(0, 212, 255, 0.15)',
-              color: '#00d4ff',
-              border: '2px solid rgba(0, 212, 255, 0.3)',
-              fontWeight: '700',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
-              e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
-              e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
-              e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = 'none'
-            }}
           >
-            Spara inställningar
+            Spara
           </button>
           <button
+            className="modern-button main-action-button"
             onClick={onBack}
-            style={{
-              width: '100%',
-              fontSize: '1.3rem',
-              padding: '18px 40px',
-              borderRadius: '30px',
-              background: 'rgba(0, 212, 255, 0.15)',
-              color: '#00d4ff',
-              border: '2px solid rgba(0, 212, 255, 0.3)',
-              fontWeight: '700',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
-              e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
-              e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
-              e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = 'none'
-            }}
           >
             Tillbaka
           </button>

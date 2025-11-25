@@ -33,12 +33,33 @@ export default function PracticePage() {
   // Start a practice session with the given list
   function startWithList(list) {
     setHasStarted(true)
+    setFeedback('') // Clear feedback when starting a new session
     loadWords(list)
   }
 
   // Handle answer submission from Flashcard
+  function handleResult(correct, card) {
+    if (correct) {
+      setFeedback('✓ Rätt!')
+      setHasPepp(!!getPepp(streak + 1))
+      if (soundEnabled) playSound('correct')
+    } else {
+      setFeedback('✗ Fel!')
+      setHasPepp(false)
+      if (soundEnabled) playSound('wrong')
+    }
+    // Clear feedback after 1.2s
+    setTimeout(() => setFeedback(''), 1200)
+  }
+
   function handleSubmit(answer) {
-    answerCurrent(answer)
+    answerCurrent(
+      answer,
+      normalizeAnswer,
+      handleResult,
+      undefined,
+      direction
+    )
   }
 
 // Sound effects using Web Audio API
