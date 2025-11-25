@@ -63,11 +63,86 @@
   margin-bottom: 24px;
 }
 
+/* Language options: flex row, wrap, gap */
+
+.language-options {
+  display: flex;
+  flex-direction: column !important;
+  gap: 12px;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+
+.language-option {
+  background: linear-gradient(145deg, rgba(0, 212, 255, 0.85), rgba(0, 153, 204, 0.85));
+  color: white;
+  border: none;
+  border-radius: 22px;
+  padding: 12px 22px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.15);
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+.language-option.active {
+  background: linear-gradient(145deg, #00d4ff, #0099cc);
+  box-shadow: 0 6px 18px rgba(0, 212, 255, 0.25);
+  transform: scale(1.04);
+}
+.language-option:focus {
+  outline: 2px solid #00d4ff;
+}
+.language-option .flag {
+  font-size: 1.3em;
+}
+.language-option .language-name {
+  font-size: 1em;
+}
+
 @media (max-width: 768px) {
   .main-textarea {
     padding: 12px 16px;
     font-size: 1.05rem;
     border-radius: 18px;
+  }
+  .main-action-button,
+  .modern-button {
+    padding: 14px 18px !important;
+    font-size: 1.1rem !important;
+    width: 95vw !important;
+    min-width: 0;
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+  .manage-container {
+    padding: 8px;
+    margin: 8px auto;
+  }
+  .language-options {
+      flex-direction: column !important;
+      gap: 8px;
+    }
+    .language-option {
+      font-size: 1rem;
+      padding: 10px 10px;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      flex: none;
+    }
+  .language-option .flag {
+    font-size: 1.1em;
+  }
+  .language-option .language-name {
+    font-size: 0.98em;
   }
 }
 /* Main menu button: shared size for all main menu buttons */
@@ -124,7 +199,7 @@ p {
   background: #112D54;
   border-radius: 20px;
   padding: 32px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  /* box-shadow removed */
   backdrop-filter: blur(10px);
   animation: fadeIn 0.5s ease;
 }
@@ -173,18 +248,11 @@ p {
     padding: 20px;
     border-radius: 16px;
   }
-
-  .modern-button {
-    padding: 14px 28px;
-    font-size: 1.1rem;
-  }
-
   .feedback-success,
   .feedback-error {
     padding: 16px 20px;
     font-size: 1.2rem;
   }
-
   .streak-badge {
     font-size: 0.9rem;
     padding: 6px 12px;
@@ -193,18 +261,48 @@ p {
 
 @media (max-width: 480px) {
   .card {
-    padding: 16px;
+    padding: 8px;
   }
-
+  .main-action-button,
   .modern-button {
-    padding: 12px 24px;
-    font-size: 1rem;
+    padding: 8px 6px !important;
+    font-size: 0.95rem !important;
+    width: 99vw !important;
+    min-width: 0;
+    max-width: 100vw;
+    box-sizing: border-box;
   }
-
+  .main-textarea {
+    padding: 6px 4px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+  .manage-container {
+    padding: 2px;
+    margin: 2px auto;
+  }
   .feedback-success,
   .feedback-error {
-    padding: 14px 18px;
-    font-size: 1.1rem;
+    padding: 8px 6px;
+    font-size: 0.95rem;
+  }
+  .language-options {
+      flex-direction: column !important;
+      gap: 6px;
+    }
+    .language-option {
+      font-size: 0.95rem;
+      padding: 8px 4px;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      flex: none;
+    }
+  .language-option .flag {
+    font-size: 1em;
+  }
+  .language-option .language-name {
+    font-size: 0.95em;
   }
 }
 

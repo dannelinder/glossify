@@ -17,7 +17,7 @@ h1, p {
   background: #112D54;
   border-radius: 20px;
   padding: 40px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  /* box-shadow removed */
 }
 
 .settings-card h1 {
@@ -34,13 +34,13 @@ h1, p {
 .settings-section {
   margin-bottom: 40px;
   padding-bottom: 32px;
-  border-bottom: 2px solid rgba(0, 212, 255, 0.1);
 }
 
-.settings-section:last-of-type {
-  border-bottom: none;
-}
+/* .settings-section:last-of-type removed (was empty) */
 
+.settings-section h3 {
+}
+  
 .settings-section h3 {
   font-size: 1.5rem;
   margin-bottom: 8px;
