@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react'
 import useFlashcards from '../hooks/useFlashcards'
 import Flashcard from '../components/Flashcard'
@@ -12,8 +11,7 @@ import { getPepp } from '../utils/getPepp'
 import { loadWordListFromDB } from '../utils/wordListHelpers'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
-
-// ...imports remain at the top...
+import StreakMessage from '../components/StreakMessage'
 
 export default function PracticePage() {
   const { signOut, user } = useAuth()
@@ -38,18 +36,24 @@ export default function PracticePage() {
   }
 
   // Handle answer submission from Flashcard
-  function handleResult(correct, card) {
+  function handleResult(correct, card, newStreak) {
     if (correct) {
-      setFeedback('✓ Rätt!')
-      setHasPepp(!!getPepp(streak + 1))
-      if (soundEnabled) playSound('correct')
+      setFeedback('✓ Rätt!');
+      const pepp = getPepp(newStreak);
+      console.log('handleResult:', { correct, newStreak, pepp });
+      setPeppMessage(pepp || '');
+      if (pepp && soundEnabled) playSound('pepp');
+      else if (soundEnabled) playSound('correct');
     } else {
-      setFeedback('✗ Fel!')
-      setHasPepp(false)
-      if (soundEnabled) playSound('wrong')
+      setFeedback('✗ Fel!');
+      setPeppMessage('');
+      if (soundEnabled) playSound('wrong');
     }
-    // Clear feedback after 1.2s
-    setTimeout(() => setFeedback(''), 1200)
+    // Clear feedback and pepp after 1.2s
+    setTimeout(() => {
+      setFeedback('');
+      setPeppMessage('');
+    }, 1200);
   }
 
   function handleSubmit(answer) {
@@ -122,7 +126,7 @@ const playSound = (type) => {
 }
 
   const [feedback, setFeedback] = useState('')
-  const [hasPepp, setHasPepp] = useState(false)
+  const [peppMessage, setPeppMessage] = useState('')
   const [hasStarted, setHasStarted] = useState(false)
   const [showManage, setShowManage] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -196,7 +200,7 @@ if (loading) {
         <h2 style={{ fontSize: '2rem', color: '#00d4ff' }}>Laddar glosor...</h2>
       </div>
     </div>
-  )
+  );
 }
 
 return (
@@ -279,168 +283,79 @@ return (
         </div>
       ) : (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
-        <div style={{ width: '100%', maxWidth: 600 }}>
-          {current ? (
-            <>
-              <Flashcard current={current} onSubmit={handleSubmit} normalize={normalizeAnswer} direction={direction} />
-              
-              {feedback && (
-                <div 
-                  className={feedback.startsWith('✓') ? 'feedback-success' : 'feedback-error'} 
-                  style={{ 
-                    marginTop: 20, 
-                    textAlign: 'center',
-                    ...(hasPepp && feedback.startsWith('✓') ? {
-                      background: 'linear-gradient(135deg, #00ff88 0%, #00ffcc 100%)',
-                      boxShadow: '0 0 30px rgba(0, 255, 136, 0.8), 0 6px 20px rgba(0, 255, 204, 0.6)',
-                      transform: 'scale(1.05)',
-                      animation: 'pulse 0.5s ease',
-                      color: '#000'
-                    } : {})
-                  }}
-                >
-                  {feedback}
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="card" style={{ textAlign: 'center', color: '#00d4ff' }}>
-              <h2 style={{ fontSize: '2.8rem', marginBottom: 24 }}>Övningen klar!</h2>
-              <p style={{ fontSize: '1.4rem', marginBottom: 36, color: '#0099cc' }}>
-                Du fick {score} av {totalAnswered} rätt! 
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center' }}>
-                <button 
-                  onClick={() => startWithList(wordLists.weekly)}
-                  style={{ 
-                    width: '280px',
-                    padding: '16px 32px',
-                    fontSize: '1.1rem',
-                    fontWeight: '600',
-                    background: 'linear-gradient(135deg, #00d4ff 0%, #0099cc 100%)',
-                    color: 'white',
-                    borderRadius: '12px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    boxShadow: '0 4px 15px rgba(0, 212, 255, 0.3)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 212, 255, 0.3)'
-                  }}
-                >
-                  Börja om - Veckans
-                </button>
-                <button 
-                  onClick={() => startWithList(wordLists.all)}
-                  style={{ 
-                    width: '280px',
-                    padding: '16px 32px',
-                    fontSize: '1.1rem',
-                    fontWeight: '600',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
-                    borderRadius: '12px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)'
-                  }}
-                >
-                  Börja om - Alla
-                </button>
-                {wrongPairs.length > 0 && (
-                  <button 
-                    onClick={() => resetToWrong()}
-                    style={{ 
-                      width: '280px',
-                      padding: '16px 32px',
-                      fontSize: '1.1rem',
-                      fontWeight: '600',
-                      background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
-                      color: 'white',
-                      borderRadius: '12px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 4px 15px rgba(255, 107, 107, 0.3)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)'
-                      e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 107, 0.4)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)'
-                      e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 107, 107, 0.3)'
-                    }}
-                  >
-                    Öva fel svar ({wrongPairs.length})
-                  </button>
-                )}
-                <button 
-                  onClick={() => { if (soundEnabled) playSound('click'); setHasStarted(false); }}
-                  style={{ 
-                    padding: '16px 32px',
-                    fontSize: '1.1rem',
-                    fontWeight: '600',
-                    background: 'transparent',
-                    color: '#667eea',
-                    borderRadius: '12px',
-                    border: '2px solid #667eea',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    marginTop: 8
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(102, 126, 234, 0.1)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent'
-                  }}
-                >
-                  Tillbaka
-                </button>
-              </div>
+        {current === null && hasStarted ? (
+          <div className="card" style={{ textAlign: 'center', color: '#00d4ff' }}>
+            <div style={{ fontSize: '0.9rem', color: '#ff6b6b', marginBottom: 8 }}>
+              [Debug] queue.length: {queue.length}, hasStarted: {String(hasStarted)}
             </div>
-          )}
-
-          {current && (
-            <>
-              <div style={{ marginTop: 24 }}>
-                <ProgressBar value={totalAnswered} max={queue.length} />
-              </div>
-
-              <div style={{ marginTop: 20, display: 'flex', justifyContent: 'space-around', background: 'rgba(0, 0, 0, 0.3)', padding: '20px', borderRadius: '16px', backdropFilter: 'blur(10px)', border: '2px solid rgba(0, 212, 255, 0.2)' }}>
-                <div>
-                  <div style={{ fontSize: '1rem', opacity: 0.8, color: '#00d4ff' }}>Poäng</div>
-                  <div style={{ fontSize: '1.7rem', fontWeight: '700' }}>{score}/{totalAnswered}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '1rem', opacity: 0.8, color: '#00d4ff' }}>Streak</div>
-                  <div style={{ fontSize: '1.7rem', fontWeight: '700' }}>{streak > 0 ? `🔥 ${streak}` : streak}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '1rem', opacity: 0.8, color: '#00d4ff' }}>Fel</div>
-                  <div style={{ fontSize: '1.7rem', fontWeight: '700', color: wrongPairs.length > 0 ? '#ff6b6b' : 'inherit' }}>{wrongPairs.length}</div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: 24, textAlign: 'center' }}>
+            <h2 style={{ fontSize: '2.8rem', marginBottom: 24 }}>Övningen klar!</h2>
+            <p style={{ fontSize: '1.4rem', marginBottom: 36, color: '#0099cc' }}>
+              Du fick {score} av {totalAnswered} rätt! 
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center' }}>
+              <button
+                onClick={() => startWithList(wordLists.weekly)}
+                style={{
+                  width: '100%',
+                  fontSize: '1.3rem',
+                  padding: '18px 40px',
+                  borderRadius: '30px',
+                  background: 'rgba(0, 212, 255, 0.15)',
+                  color: '#00d4ff',
+                  border: '2px solid rgba(0, 212, 255, 0.3)',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
+                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
+                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                Börja om - Veckans
+              </button>
+              <button
+                onClick={() => startWithList(wordLists.all)}
+                style={{
+                  width: '100%',
+                  fontSize: '1.3rem',
+                  padding: '18px 40px',
+                  borderRadius: '30px',
+                  background: 'rgba(0, 212, 255, 0.15)',
+                  color: '#00d4ff',
+                  border: '2px solid rgba(0, 212, 255, 0.3)',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
+                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
+                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                Börja om - Alla
+              </button>
+              {wrongPairs.length > 0 && (
                 <button
-                  onClick={() => { playSound('click'); setHasStarted(false); }}
+                  onClick={() => resetToWrong()}
                   style={{
                     width: '100%',
                     fontSize: '1.3rem',
@@ -467,14 +382,113 @@ return (
                     e.currentTarget.style.boxShadow = 'none'
                   }}
                 >
-                  Avsluta övning
+                  Öva fel svar ({wrongPairs.length})
                 </button>
+              )}
+              <button
+                style={{
+                  width: '100%',
+                  fontSize: '1.3rem',
+                  padding: '18px 40px',
+                  borderRadius: '30px',
+                  background: 'rgba(0, 212, 255, 0.15)',
+                  color: '#00d4ff',
+                  border: '2px solid rgba(0, 212, 255, 0.3)',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                }}
+                onClick={() => { playSound('click'); setHasStarted(false); }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
+                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
+                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                Avsluta övning
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ width: '100%', maxWidth: 600 }}>
+            {/* Main session content: Flashcard always at top */}
+            <Flashcard current={current} onSubmit={handleSubmit} normalize={normalizeAnswer} direction={direction} />
+            {(!peppMessage && feedback) && (
+              <div
+                className={feedback.startsWith('✓') ? 'feedback-success' : 'feedback-error'}
+                style={{
+                  marginTop: 20,
+                  textAlign: 'center'
+                }}
+              >
+                {feedback}
               </div>
-            </>
-          )}
-        </div>
+            )}
+            {peppMessage && <StreakMessage streak={null} message={peppMessage} />}
+            {/* Progress bar below flashcard */}
+            <div style={{ marginTop: 32 }}>
+              <ProgressBar value={totalAnswered} max={queue.length} />
+            </div>
+            {/* Stats below progress bar */}
+            <div style={{ marginTop: 20, display: 'flex', justifyContent: 'space-around', background: 'rgba(0, 0, 0, 0.3)', padding: '20px', borderRadius: '16px', backdropFilter: 'blur(10px)', border: '2px solid rgba(0, 212, 255, 0.2)' }}>
+              <div>
+                <div style={{ fontSize: '1rem', opacity: 0.8, color: '#00d4ff' }}>Poäng</div>
+                <div style={{ fontSize: '1.7rem', fontWeight: '700' }}>{score}/{totalAnswered}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '1rem', opacity: 0.8, color: '#00d4ff' }}>Streak</div>
+                <div style={{ fontSize: '1.7rem', fontWeight: '700' }}>{streak > 0 ? `🔥 ${streak}` : streak}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '1rem', opacity: 0.8, color: '#00d4ff' }}>Fel</div>
+                <div style={{ fontSize: '1.7rem', fontWeight: '700', color: wrongPairs.length > 0 ? '#ff6b6b' : 'inherit' }}>{wrongPairs.length}</div>
+              </div>
+            </div>
+            {/* Avsluta övning always at bottom */}
+            <div style={{ marginTop: 32, textAlign: 'center' }}>
+              <button
+                onClick={() => { playSound('click'); setHasStarted(false); }}
+                style={{
+                  width: '100%',
+                  fontSize: '1.3rem',
+                  padding: '18px 40px',
+                  borderRadius: '30px',
+                  background: 'rgba(0, 212, 255, 0.15)',
+                  color: '#00d4ff',
+                  border: '2px solid rgba(0, 212, 255, 0.3)',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
+                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
+                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                Avsluta övning
+              </button>
+            </div>
+          </div>
+        )}
       </div>
-      )}
-    </div>
-  )
+    )}
+  </div>
+);
 }

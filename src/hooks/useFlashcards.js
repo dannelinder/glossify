@@ -50,20 +50,25 @@ return true
 
 
 const answerCurrent = useCallback((userAnswer, normalizeFn, onResult, customDelay, direction = 'sv-target') => {
-if (!current) return
-// Determine which property to check based on direction
-const correctAnswer = direction === 'sv-target' ? current.ty : current.sv
-const correct = normalizeFn(userAnswer) === normalizeFn(correctAnswer)
-setTotalAnswered((t) => t + 1)
-if (correct) {
-setScore((s) => s + 1)
-setStreak((st) => st + 1)
-onResult(true, current)
-} else {
-setWrongPairs((w) => [...w, [current.sv, current.ty]])
-setStreak(0)
-onResult(false, current)
-}
+  if (!current) return;
+  // Determine which property to check based on direction
+  const correctAnswer = direction === 'sv-target' ? current.ty : current.sv;
+  const correct = normalizeFn(userAnswer) === normalizeFn(correctAnswer);
+  setTotalAnswered((t) => t + 1);
+  if (correct) {
+    setScore((s) => s + 1);
+    setStreak((st) => {
+      const newStreak = st + 1;
+      onResult(true, current, newStreak);
+      return newStreak;
+    });
+  } else {
+    setWrongPairs((w) => [...w, [current.sv, current.ty]]);
+    setStreak(() => {
+      onResult(false, current, 0);
+      return 0;
+    });
+  }
 
 
 // move to next after delay
@@ -88,17 +93,17 @@ const hasMore = current !== null
 
 
 return {
-deck,
-queue,
-current,
-index,
-hasMore,
-totalAnswered,
-score,
-wrongPairs,
-streak,
-loadWords,
-answerCurrent,
-resetToWrong
+  deck,
+  queue,
+  current,
+  index,
+  hasMore,
+  totalAnswered,
+  score,
+  wrongPairs,
+  streak,
+  loadWords,
+  answerCurrent,
+  resetToWrong
 }
 }

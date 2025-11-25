@@ -1,3 +1,18 @@
+/* Streak/pepp message styling for consistent feedback visuals */
+.streak-message {
+  margin-top: 12px;
+  padding: 18px 28px;
+  background: linear-gradient(135deg, #39ff14 0%, #00ff88 100%);
+  border-radius: 18px;
+  color: #112D54;
+  font-weight: 900;
+  font-size: 1.25rem;
+  text-align: center;
+  box-shadow: 0 6px 24px 0 rgba(57,255,20,0.25), 0 0 8px 2px #39ff14;
+  letter-spacing: 0.01em;
+  animation: fadeIn 0.3s ease;
+  text-shadow: 0 2px 8px #baffc9, 0 0 2px #00ff88;
+}
 /* Centered heading for ManagePage */
 .manage-title {
   text-align: center;
