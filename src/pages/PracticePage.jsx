@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react'
 import useFlashcards from '../hooks/useFlashcards'
 import Flashcard from '../components/Flashcard'
@@ -11,6 +12,34 @@ import { getPepp } from '../utils/getPepp'
 import { loadWordListFromDB } from '../utils/wordListHelpers'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
+
+// ...imports remain at the top...
+
+export default function PracticePage() {
+  const { signOut, user } = useAuth()
+  const {
+    queue,
+    current,
+    totalAnswered,
+    score,
+    wrongPairs,
+    streak,
+    loadWords,
+    answerCurrent,
+    resetToWrong
+  } = useFlashcards([], 1200)
+
+
+  // Start a practice session with the given list
+  function startWithList(list) {
+    setHasStarted(true)
+    loadWords(list)
+  }
+
+  // Handle answer submission from Flashcard
+  function handleSubmit(answer) {
+    answerCurrent(answer)
+  }
 
 // Sound effects using Web Audio API
 const playSound = (type) => {
@@ -71,20 +100,6 @@ const playSound = (type) => {
   }
 }
 
-export default function PracticePage() {
-  const { signOut, user } = useAuth()
-  const {
-    queue,
-    current,
-    totalAnswered,
-    score,
-    wrongPairs,
-    streak,
-    loadWords,
-    answerCurrent,
-    resetToWrong
-  } = useFlashcards([], 1200)
-
   const [feedback, setFeedback] = useState('')
   const [hasPepp, setHasPepp] = useState(false)
   const [hasStarted, setHasStarted] = useState(false)
@@ -141,45 +156,7 @@ export default function PracticePage() {
         .select('*')
         .eq('user_id', user.id)
         .single()
-
-      if (error && error.code !== 'PGRST116') throw error
-      return data
-    } catch (error) {
-      console.error('Error loading settings:', error)
-      return null
-    }
-  }
-
-  function startWithList(words) {
-    if (soundEnabled) playSound('click')
-    loadWords(words)
-    setHasStarted(true)
-  }
-
-  function handleSubmit(userInput) {
-    // Pre-calculate if there will be a pepp message for correct answer
-    const pepMsg = getPepp(streak + 1)
-    const isPepp = !!pepMsg
-    // Check if it's a rare pepp (streak milestone: 3, 5, 10, 15, 20, 25)
-    const isRarePepp = [3, 5, 10, 15, 20, 25].includes(streak + 1) && isPepp
-    const correctDelay = isPepp ? 3200 : 1200
-    
-    answerCurrent(userInput, normalizeAnswer, (correct, card) => {
-      // Determine the correct answer based on direction
-      const correctAnswer = direction === 'sv-target' ? card.ty : card.sv
-      
-      if (correct) {
-        if (soundEnabled) playSound(isRarePepp ? 'pepp' : 'correct')
-        setHasPepp(isRarePepp)
-        setFeedback(pepMsg ? `✓ Rätt! ${pepMsg}` : '✓ Rätt!')
-        setTimeout(() => setFeedback(''), correctDelay)
-      } else {
-        if (soundEnabled) playSound('wrong')
-        setHasPepp(false)
-        setFeedback(`✗ Fel, rätt svar är: ${correctAnswer}`)
-        setTimeout(() => setFeedback(''), 1200)
-      }
-    }, correctDelay, direction)
+    } catch (e) {}
   }
 
 
@@ -247,153 +224,33 @@ return (
           </p>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', marginTop: 0 }}>
-            <button 
+            <button
+              className="modern-button main-action-button"
               onClick={() => startWithList(wordLists.weekly)}
-              style={{ 
-                width: '340px', 
-                fontSize: '1.5rem',
-                padding: '22px 45px',
-                borderRadius: '30px',
-                background: 'rgba(0, 212, 255, 0.15)',
-                color: '#00d4ff',
-                border: '2px solid rgba(0, 212, 255, 0.3)',
-                fontWeight: '700',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
-                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
-                e.currentTarget.style.transform = 'translateY(-2px)'
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
-                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = 'none'
-              }}
             >
               Veckans glosor
             </button>
             <button 
+              className="modern-button main-action-button"
               onClick={() => startWithList(wordLists.all)}
-              style={{
-                width: '340px',
-                fontSize: '1.5rem',
-                padding: '22px 45px',
-                borderRadius: '30px',
-                background: 'rgba(0, 212, 255, 0.15)',
-                color: '#00d4ff',
-                border: '2px solid rgba(0, 212, 255, 0.3)',
-                fontWeight: '700',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
-                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
-                e.currentTarget.style.transform = 'translateY(-2px)'
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
-                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = 'none'
-              }}
             >
               Alla glosor
             </button>
             <button 
+              className="modern-button main-action-button"
               onClick={() => startWithList(wordLists.verbs)}
-              style={{
-                width: '340px',
-                fontSize: '1.5rem',
-                padding: '22px 45px',
-                borderRadius: '30px',
-                background: 'rgba(0, 212, 255, 0.15)',
-                color: '#00d4ff',
-                border: '2px solid rgba(0, 212, 255, 0.3)',
-                fontWeight: '700',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
-                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
-                e.currentTarget.style.transform = 'translateY(-2px)'
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
-                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = 'none'
-              }}
             >
               Verb
             </button>
             <button 
+              className="modern-button main-action-button"
               onClick={() => { if (soundEnabled) playSound('click'); setShowManage(true); }}
-              style={{
-                width: '340px',
-                fontSize: '1.5rem',
-                padding: '22px 45px',
-                borderRadius: '30px',
-                background: 'rgba(0, 212, 255, 0.15)',
-                color: '#00d4ff',
-                border: '2px solid rgba(0, 212, 255, 0.3)',
-                fontWeight: '700',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
-                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
-                e.currentTarget.style.transform = 'translateY(-2px)'
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
-                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = 'none'
-              }}
             >
               Hantera glosor
             </button>
             <button 
+              className="modern-button main-action-button"
               onClick={() => { if (soundEnabled) playSound('click'); setShowSettings(true); }}
-              style={{
-                width: '340px',
-                fontSize: '1.5rem',
-                padding: '22px 45px',
-                borderRadius: '30px',
-                background: 'rgba(0, 212, 255, 0.15)',
-                color: '#00d4ff',
-                border: '2px solid rgba(0, 212, 255, 0.3)',
-                fontWeight: '700',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
-                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
-                e.currentTarget.style.transform = 'translateY(-2px)'
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
-                e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = 'none'
-              }}
             >
               Inställningar
             </button>

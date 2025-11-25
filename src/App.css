@@ -1,3 +1,9 @@
+/* Main menu button: shared size for all main menu buttons */
+.main-action-button {
+  width: 340px !important;
+  font-size: 1.5rem !important;
+  padding: 22px 45px !important;
+}
 /* Global heading and paragraph color styles */
 h1 {
   color: #fff !important;
@@ -14,7 +20,7 @@ p {
 }
 
 .modern-button {
-  background: linear-gradient(145deg, #00d4ff, #0099cc);
+  background: linear-gradient(145deg, rgba(0, 212, 255, 0.85), rgba(0, 153, 204, 0.85));
   color: white;
   padding: 18px 40px;
   border-radius: 30px;
@@ -25,18 +31,21 @@ p {
   position: relative;
   top: 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  opacity: 0.92;
 }
 
 .modern-button:hover {
   box-shadow: 0 10px 0 #006b8f, 0 14px 30px rgba(0, 212, 255, 0.6);
   transform: translateY(-2px);
   top: -2px;
+  opacity: 1;
 }
 
 .modern-button:active {
   box-shadow: 0 2px 0 #006b8f, 0 4px 15px rgba(0, 212, 255, 0.4);
   transform: translateY(2px);
   top: 6px;
+  opacity: 0.85;
 }
 
 .card {
