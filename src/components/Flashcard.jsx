@@ -26,8 +26,8 @@ onSubmit(input)
 return (
 <div className="card" style={{ textAlign: 'center' }}>
   <div style={{ 
-    fontSize: '3.5rem', 
-    marginBottom: 36, 
+    fontSize: '2.3rem', 
+    marginBottom: 16, 
     fontWeight: '700',
     color: '#00d4ff',
     textShadow: '0 2px 8px rgba(0, 212, 255, 0.4)'

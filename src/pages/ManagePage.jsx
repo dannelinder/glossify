@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react'
-import { loadWordListFromDB, saveWordListToDB } from '../utils/wordListHelpers'
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { loadWordListFromDB, saveWordListToDB } from '../utils/wordListHelpers';
 
-export default function ManagePage({ onBack }) {
+export default function ManagePage() {
+  const navigate = useNavigate();
   const [weeklyText, setWeeklyText] = useState('')
   const [allText, setAllText] = useState('')
   const [verbsText, setVerbsText] = useState('')
@@ -54,7 +56,7 @@ export default function ManagePage({ onBack }) {
     return (
       <div className="manage-container">
         <div className="card">
-          <h1 className="manage-title">Laddar glosor...</h1>
+          <h1 className="glossify-header">Laddar glosor...</h1>
         </div>
       </div>
     )
@@ -63,7 +65,7 @@ export default function ManagePage({ onBack }) {
   return (
     <div className="manage-container">
       <div className="card">
-        <h1 className="manage-title">Hantera glosor</h1>
+        <h1 className="glossify-header">Hantera glosor</h1>
         <p className="manage-description">
           Från svenska till det språk du valt i inställningar (ett ord per rad)<br />
           <code className="example-code">svenska;engelska</code>, <code className="example-code">svenska;tyska</code> eller <code className="example-code">svenska;spanska</code>
@@ -72,66 +74,38 @@ export default function ManagePage({ onBack }) {
 
         <div className="manage-section">
           <h3>Veckans glosor</h3>
-          <textarea
-            className="main-textarea"
-            value={weeklyText}
-            onChange={(e) => setWeeklyText(e.target.value)}
-            placeholder="hund;dog"
-          />
+            <textarea
+              id="weekly-textarea"
+              className="main-textarea"
+              value={weeklyText}
+              onChange={(e) => setWeeklyText(e.target.value)}
+              placeholder="hund;dog"
+            />
         </div>
 
         <div className="manage-section">
           <h3>Alla glosor</h3>
-          <textarea
-            className="main-textarea"
-            value={allText}
-            onChange={(e) => setAllText(e.target.value)}
-            placeholder="hus;house"
-          />
+            <textarea
+              id="all-textarea"
+              className="main-textarea"
+              value={allText}
+              onChange={(e) => setAllText(e.target.value)}
+              placeholder="hus;house"
+            />
         </div>
 
         <div className="manage-section">
           <h3>Verb</h3>
-          <textarea
-            className="main-textarea"
-            value={verbsText}
-            onChange={(e) => setVerbsText(e.target.value)}
-            placeholder="springa;run"
-          />
+            <textarea
+              id="verbs-textarea"
+              className="main-textarea"
+              value={verbsText}
+              onChange={(e) => setVerbsText(e.target.value)}
+              placeholder="springa;laufen"
+            />
         </div>
 
 
-        <div style={{ marginBottom: 28 }}>
-          <h3 style={{ 
-            fontSize: '1.4rem', 
-            marginBottom: 12,
-            color: '#00d4ff',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8
-          }}>
-            Verb
-          </h3>
-          <textarea
-            value={verbsText}
-            onChange={(e) => setVerbsText(e.target.value)}
-            placeholder="springa;run"
-            style={{
-              width: '100%',
-              minHeight: 160,
-              padding: '18px 40px',
-              fontSize: '1.3rem',
-              fontFamily: 'monospace',
-              borderRadius: '30px',
-              border: '2px solid rgba(0, 212, 255, 0.3)',
-              background: 'rgba(255, 255, 255, 0.9)',
-              color: '#112D54',
-              fontWeight: 600,
-              textAlign: 'center',
-              resize: 'vertical'
-            }}
-          />
-        </div>
 
         <div className="manage-actions">
           <button
@@ -142,7 +116,7 @@ export default function ManagePage({ onBack }) {
           </button>
           <button
             className="modern-button main-action-button"
-            onClick={onBack}
+            onClick={() => navigate('/practice')}
           >
             Tillbaka
           </button>

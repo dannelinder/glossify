@@ -62,7 +62,7 @@ export async function saveWordListToDB(key, textContent) {
       return false
     }
 
-    console.log('Saving word list:', key, 'for user:', user.id)
+
 
     // Use upsert with the composite unique constraint (name + user_id)
     const { error } = await supabase
@@ -81,7 +81,7 @@ export async function saveWordListToDB(key, textContent) {
       throw error
     }
     
-    console.log('Save successful')
+
     return true
   } catch (error) {
     console.error('Error saving word list to Supabase:', error)

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabaseClient'
-import { useAuth } from '../context/AuthContext'
-import './SettingsPage.css'
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../context/AuthContext';
+import './SettingsPage.css';
 
 const LANGUAGES = [
   { code: 'en', name: 'Engelska' },
@@ -9,8 +10,9 @@ const LANGUAGES = [
   { code: 'es', name: 'Spanska' }
 ]
 
-export default function SettingsPage({ onBack }) {
-  const { user } = useAuth()
+export default function SettingsPage() {
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth()
   const [targetLanguage, setTargetLanguage] = useState('en')
   const [direction, setDirection] = useState('sv-target')
   const [soundEnabled, setSoundEnabled] = useState(true)
@@ -18,11 +20,7 @@ export default function SettingsPage({ onBack }) {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadSettings()
-  }, [])
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('user_settings')
@@ -38,12 +36,16 @@ export default function SettingsPage({ onBack }) {
         setSoundEnabled(data.sound_enabled ?? true)
         setCaseSensitive(data.case_sensitive ?? true)
       }
-    } catch (error) {
-      console.error('Error loading settings:', error)
-    } finally {
+      setLoading(false)
+    } catch (e) {
+      setMessage('Fel vid hämtning av inställningar')
       setLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    loadSettings()
+  }, [loadSettings])
 
   const saveSettings = async () => {
     try {
@@ -85,7 +87,7 @@ export default function SettingsPage({ onBack }) {
   return (
     <div className="settings-container">
       <div className="settings-card">
-        <h1>Inställningar</h1>
+        <h1 className="glossify-header">Inställningar</h1>
 
         <div className="settings-section">
           <h3>Språk</h3>
@@ -160,13 +162,19 @@ export default function SettingsPage({ onBack }) {
         <div className="settings-actions" style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', marginTop: 0 }}>
           <button
             className="modern-button main-action-button"
+            onClick={() => signOut()}
+          >
+            Logga ut
+          </button>
+          <button
+            className="modern-button main-action-button"
             onClick={saveSettings}
           >
             Spara
           </button>
           <button
             className="modern-button main-action-button"
-            onClick={onBack}
+            onClick={() => navigate('/practice')}
           >
             Tillbaka
           </button>

@@ -1,209 +1,203 @@
-import React, { useState, useEffect } from 'react'
-import useFlashcards from '../hooks/useFlashcards'
-import Flashcard from '../components/Flashcard'
-import ProgressBar from '../components/ProgressBar'
-import ManagePage from './ManagePage'
-import SettingsPage from './SettingsPage'
-import weeklyWords from '../data/weeklyWords'
-import allWords from '../data/allWords'
-import verbs from '../data/verbs'
-import { getPepp } from '../utils/getPepp'
-import { loadWordListFromDB } from '../utils/wordListHelpers'
-import { useAuth } from '../context/AuthContext'
-import { supabase } from '../lib/supabaseClient'
-import StreakMessage from '../components/StreakMessage'
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import useFlashcards from '../hooks/useFlashcards';
+import Flashcard from '../components/Flashcard';
+import ProgressBar from '../components/ProgressBar';
+import weeklyWords from '../data/weeklyWords';
+import allWords from '../data/allWords';
 
-export default function PracticePage() {
-  const { signOut, user } = useAuth()
+import { useAuth } from '../context/AuthContext';
+import verbs from '../data/verbs';
+import { getPepp } from '../utils/getPepp';
+import StreakMessage from '../components/StreakMessage';
+import { loadWordListFromDB } from '../utils/wordListHelpers';
+
+
+// Utility: normalize answer
+function normalizeAnswer(str) {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[.,;:!?]/g, '')
+    .replace(/ß/g, 'ss')
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/\u00e4/g, 'ae') // ä
+    .replace(/\u00f6/g, 'oe') // ö
+    .replace(/\u00fc/g, 'ue'); // ü
+}
+
+// Utility: play melody-based sound effects
+function playSound(name, soundEnabled = true) {
+  if (!soundEnabled) return;
+  // Map logical sound names to actual file names
+  const soundMap = {
+    success: 'correct',
+    error: 'wrong',
+    pepp: 'streak',
+    click: 'back',
+    newword: 'newword'
+  };
+  const file = soundMap[name] || name;
+  const audio = new window.Audio(`/sounds/${file}.wav`);
+  audio.currentTime = 0;
+  audio.onerror = function(e) {
+    console.warn(`Sound file not found or not supported: /sounds/${file}.wav`, e);
+  };
+  audio.play().catch((err) => {
+    // Prevent uncaught promise error
+    console.warn('Audio play failed:', err);
+  });
+}
+
+function PracticePage() {
+  const navigate = useNavigate();
+  const { list } = useParams();
+  const { user, signOut } = useAuth();
+  const [activeList, setActiveList] = useState(list || 'weekly');
+  const [hasStarted, setHasStarted] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const [peppMessage, setPeppMessage] = useState('');
+  const [pendingNext, setPendingNext] = useState(false);
+  const [listLoaded, setListLoaded] = useState(false);
+  // Remove local state for queue, current, score, totalAnswered, streak, wrongPairs
+  const direction = 'sv-target'; // or get from settings
+
+  // Use the hook with the current word array
+
+  function getWordArrayAsync(listName) {
+    // Try to load from DB, fallback to static
+    let key = 'weeklyWords';
+    if (listName === 'all') key = 'allWords';
+    if (listName === 'verbs') key = 'verbs';
+    return loadWordListFromDB(key).then((words) => {
+      if (!words || words.length === 0) {
+        if (listName === 'all') return allWords;
+        if (listName === 'verbs') return verbs;
+        return weeklyWords;
+      }
+      return words;
+    });
+  }
+
   const {
     queue,
     current,
-    totalAnswered,
     score,
-    wrongPairs,
+    totalAnswered,
     streak,
+    wrongPairs,
     loadWords,
     answerCurrent,
+    goToNextWord,
     resetToWrong
-  } = useFlashcards([], 1200)
+  } = useFlashcards([]);
 
 
-  // Start a practice session with the given list
-  function startWithList(list) {
-    setHasStarted(true)
-    setFeedback('') // Clear feedback when starting a new session
-    loadWords(list)
-  }
-
-  // Handle answer submission from Flashcard
-  function handleResult(correct, card, newStreak) {
-    if (correct) {
-      setFeedback('✓ Rätt!');
-      const pepp = getPepp(newStreak);
-      console.log('handleResult:', { correct, newStreak, pepp });
-      setPeppMessage(pepp || '');
-      if (pepp && soundEnabled) playSound('pepp');
-      else if (soundEnabled) playSound('correct');
-    } else {
-      setFeedback('✗ Fel!');
-      setPeppMessage('');
-      if (soundEnabled) playSound('wrong');
-    }
-    // Clear feedback and pepp after 1.2s
-    setTimeout(() => {
+  // Stateless retry: use wrongPairs directly for retry button and logic
+  function handleRetryWrong() {
+    if (wrongPairs && wrongPairs.length > 0) {
+      // Custom retry: start a new round with current wrongPairs
+      resetToWrong(wrongPairs);
+      setHasStarted(true);
+      setListLoaded(true);
       setFeedback('');
       setPeppMessage('');
-    }, 1200);
+    }
   }
+
+
+  // Debug: log wrongPairs at end of session
+  useEffect(() => {
+    if (current === null && !hasStarted && listLoaded) {
+
+    }
+  }, [current, hasStarted, listLoaded, wrongPairs]);
+
+  // Whenever activeList changes, load the new words from DB or fallback
+  useEffect(() => {
+    getWordArrayAsync(activeList).then((words) => {
+
+      loadWords(words);
+      setListLoaded(true);
+    });
+    // eslint-disable-next-line
+  }, [activeList]);
+
+
 
   function handleSubmit(answer) {
     answerCurrent(
       answer,
       normalizeAnswer,
-      handleResult,
+      (isCorrect, card, newStreak) => {
+        if (isCorrect) {
+          const pepp = getPepp(newStreak);
+          if (pepp) {
+            setPeppMessage(pepp);
+            playSound('pepp');
+          } else {
+            setPeppMessage('');
+            playSound('success');
+          }
+          setFeedback('✓ Rätt!');
+        } else {
+          playSound('error');
+          setPeppMessage('');
+          const correctAnswer = direction === 'sv-target' ? card.ty : card.sv;
+          setFeedback(`✗ Fel, rätta svaret var "${correctAnswer}"`);
+        }
+        setPendingNext(true);
+      },
       undefined,
       direction
-    )
+    );
   }
 
-// Sound effects using Web Audio API
-const playSound = (type) => {
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)()
-  const oscillator = audioContext.createOscillator()
-  const gainNode = audioContext.createGain()
-  
-  oscillator.connect(gainNode)
-  gainNode.connect(audioContext.destination)
-  
-  if (type === 'correct') {
-    // Happy ascending notes
-    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime) // C5
-    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1) // E5
-    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2) // G5
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
-    oscillator.start(audioContext.currentTime)
-    oscillator.stop(audioContext.currentTime + 0.3)
-  } else if (type === 'pepp') {
-    // Epic celebration sound - ascending arpeggio with multiple tones
-    const playNote = (freq, time, duration) => {
-      const osc = audioContext.createOscillator()
-      const gain = audioContext.createGain()
-      osc.connect(gain)
-      gain.connect(audioContext.destination)
-      osc.frequency.setValueAtTime(freq, time)
-      osc.type = 'sine'
-      gain.gain.setValueAtTime(0.35, time)
-      gain.gain.exponentialRampToValueAtTime(0.01, time + duration)
-      osc.start(time)
-      osc.stop(time + duration)
-    }
-    
-    // Play victory chord progression
-    const now = audioContext.currentTime
-    playNote(523.25, now, 0.15)        // C5
-    playNote(659.25, now + 0.08, 0.15)  // E5
-    playNote(783.99, now + 0.16, 0.15)  // G5
-    playNote(1046.50, now + 0.24, 0.3)  // C6 - triumphant high note
-  } else if (type === 'wrong') {
-    // Descending buzz
-    oscillator.frequency.setValueAtTime(200, audioContext.currentTime)
-    oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.2)
-    oscillator.type = 'sawtooth'
-    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2)
-    oscillator.start(audioContext.currentTime)
-    oscillator.stop(audioContext.currentTime + 0.2)
-  } else if (type === 'click') {
-    // Quick click sound
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime)
-    oscillator.type = 'square'
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05)
-    oscillator.start(audioContext.currentTime)
-    oscillator.stop(audioContext.currentTime + 0.05)
-  }
-}
 
-  const [feedback, setFeedback] = useState('')
-  const [peppMessage, setPeppMessage] = useState('')
-  const [hasStarted, setHasStarted] = useState(false)
-  const [showManage, setShowManage] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [soundEnabled, setSoundEnabled] = useState(true)
-  const [targetLanguage, setTargetLanguage] = useState('en')
-  const [direction, setDirection] = useState('sv-target')
-  const [caseSensitive, setCaseSensitive] = useState(true)
-  const [wordLists, setWordLists] = useState({
-    weekly: weeklyWords,
-    all: allWords,
-    verbs: verbs
-  })
-
-  function normalizeAnswer(str) {
-    let normalized = str.trim().replace(/ß/g, 'ss')
-    return caseSensitive ? normalized : normalized.toLowerCase()
-  }
-
+  // Clear feedback and pepp after a delay, then advance
   useEffect(() => {
-    // Load word lists and settings from Supabase on mount
-    async function loadData() {
-      const [weekly, all, verbsList, settings] = await Promise.all([
-        loadWordListFromDB('weeklyWords'),
-        loadWordListFromDB('allWords'),
-        loadWordListFromDB('verbs'),
-        loadSettings()
-      ])
-      
-      setWordLists({
-        weekly: weekly.length ? weekly : weeklyWords,
-        all: all.length ? all : allWords,
-        verbs: verbsList.length ? verbsList : verbs
-      })
-      
-      if (settings) {
-        setSoundEnabled(settings.sound_enabled ?? true)
-        setTargetLanguage(settings.target_language || 'en')
-        setDirection(settings.direction || 'sv-target')
-        setCaseSensitive(settings.case_sensitive ?? true)
-      }
-      
-      setLoading(false)
+    if (pendingNext) {
+      const timer = setTimeout(() => {
+        setFeedback('');
+        setPeppMessage('');
+        goToNextWord();
+        setPendingNext(false);
+      }, 1200);
+      return () => clearTimeout(timer);
     }
-    loadData()
-  }, [showManage, showSettings]) // Reload when returning from manage or settings page
+  }, [pendingNext, goToNextWord]);
 
-  async function loadSettings() {
-    try {
-      const { data, error } = await supabase
-        .from('user_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-    } catch (e) {}
+  // When current becomes null (end of session), show end-of-list options
+  useEffect(() => {
+    if (hasStarted && current === null) {
+      setHasStarted(false);
+      // Do NOT set setListLoaded(false) here; keep it true so end-of-session UI is always shown
+      setFeedback('');
+      setPeppMessage('');
+    }
+  }, [current, hasStarted]);
+
+  // Helper to check if answer is correct (for delay logic)
+
+  // Map route param to user-friendly label
+  const listLabelMap = {
+    weekly: 'Veckans glosor',
+    all: 'Alla glosor',
+    verbs: 'Verb'
+  };
+  let activeLabel;
+  if (listLabelMap[activeList]) {
+    activeLabel = listLabelMap[activeList];
+  } else if (activeList) {
+    activeLabel = `Okänd lista: ${activeList}`;
+  } else {
+    activeLabel = 'Veckans glosor';
   }
 
-
-if (showManage) {
-  return <ManagePage onBack={() => setShowManage(false)} />
-}
-
-if (showSettings) {
-  return <SettingsPage onBack={() => setShowSettings(false)} />
-}
-
-if (loading) {
   return (
-    <div style={{ maxWidth: 700, margin: '0 auto', padding: 24, minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'center' }}>
-      <div className="card">
-        <h2 style={{ fontSize: '2rem', color: '#00d4ff' }}>Laddar glosor...</h2>
-      </div>
-    </div>
-  );
-}
-
-return (
     <div style={{
       maxWidth: 700,
       margin: '0 auto',
@@ -214,207 +208,41 @@ return (
       justifyContent: 'center',
       background: '#112D54'
     }}>
-      {/* Sign out button */}
-      <div style={{ position: 'absolute', top: 20, right: 20 }}>
-        <button 
-          onClick={() => signOut()}
-          style={{
-            padding: '10px 20px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '8px',
-            color: 'rgba(255, 255, 255, 0.8)',
-            cursor: 'pointer',
-            fontSize: '14px',
-            transition: 'all 0.2s'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
-          }}
-        >
-          Sign Out ({user?.email})
-        </button>
+      {/* Show which list is active */}
+      <div style={{ textAlign: 'center', marginBottom: 0 }}>
+        <h1 className="glossify-header" style={{ marginBottom: 8 }}>{activeLabel}</h1>
       </div>
-
-      {!hasStarted ? (
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: '4rem', marginBottom: 16, textShadow: '0 0 40px rgba(0, 212, 255, 0.6), 0 2px 10px rgba(0,0,0,0.3)' }}>
-            Glossify
-          </h1>
-          <p style={{ fontSize: '1.3rem', marginBottom: 50, opacity: 0.95, textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
-            Välj din övning och börja plugga!
-          </p>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', marginTop: 0 }}>
-            <button
-              className="modern-button main-action-button"
-              onClick={() => startWithList(wordLists.weekly)}
-            >
-              Veckans glosor
-            </button>
-            <button 
-              className="modern-button main-action-button"
-              onClick={() => startWithList(wordLists.all)}
-            >
-              Alla glosor
-            </button>
-            <button 
-              className="modern-button main-action-button"
-              onClick={() => startWithList(wordLists.verbs)}
-            >
-              Verb
-            </button>
-            <button 
-              className="modern-button main-action-button"
-              onClick={() => { if (soundEnabled) playSound('click'); setShowManage(true); }}
-            >
-              Hantera glosor
-            </button>
-            <button 
-              className="modern-button main-action-button"
-              onClick={() => { if (soundEnabled) playSound('click'); setShowSettings(true); }}
-            >
-              Inställningar
-            </button>
-          </div>
-        </div>
-      ) : (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
-        {current === null && hasStarted ? (
+        {current === null && listLoaded ? (
           <div className="card" style={{ textAlign: 'center', color: '#00d4ff' }}>
-            <div style={{ fontSize: '0.9rem', color: '#ff6b6b', marginBottom: 8 }}>
-              [Debug] queue.length: {queue.length}, hasStarted: {String(hasStarted)}
-            </div>
             <h2 style={{ fontSize: '2.8rem', marginBottom: 24 }}>Övningen klar!</h2>
             <p style={{ fontSize: '1.4rem', marginBottom: 36, color: '#0099cc' }}>
-              Du fick {score} av {totalAnswered} rätt! 
+              Du fick {score} av {totalAnswered} rätt!
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center' }}>
               <button
-                onClick={() => startWithList(wordLists.weekly)}
-                style={{
-                  width: '100%',
-                  fontSize: '1.3rem',
-                  padding: '18px 40px',
-                  borderRadius: '30px',
-                  background: 'rgba(0, 212, 255, 0.15)',
-                  color: '#00d4ff',
-                  border: '2px solid rgba(0, 212, 255, 0.3)',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                onClick={() => {
+                  getWordArrayAsync(activeList).then((words) => {
+                    loadWords(words);
+                    setHasStarted(true);
+                    setListLoaded(true);
+                    setFeedback('');
+                    setPeppMessage('');
+                  });
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
-                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
-                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
+                style={{ width: '100%', fontSize: '1.3rem', padding: '18px 40px', borderRadius: '30px', background: 'rgba(0, 212, 255, 0.15)', color: '#00d4ff', border: '2px solid rgba(0, 212, 255, 0.3)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s ease', textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)' }}
               >
-                Börja om - Veckans
+                Börja om
               </button>
-              <button
-                onClick={() => startWithList(wordLists.all)}
-                style={{
-                  width: '100%',
-                  fontSize: '1.3rem',
-                  padding: '18px 40px',
-                  borderRadius: '30px',
-                  background: 'rgba(0, 212, 255, 0.15)',
-                  color: '#00d4ff',
-                  border: '2px solid rgba(0, 212, 255, 0.3)',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
-                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
-                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-              >
-                Börja om - Alla
-              </button>
-              {wrongPairs.length > 0 && (
+              {wrongPairs && wrongPairs.length > 0 && (
                 <button
-                  onClick={() => resetToWrong()}
-                  style={{
-                    width: '100%',
-                    fontSize: '1.3rem',
-                    padding: '18px 40px',
-                    borderRadius: '30px',
-                    background: 'rgba(0, 212, 255, 0.15)',
-                    color: '#00d4ff',
-                    border: '2px solid rgba(0, 212, 255, 0.3)',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
-                    e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
-                    e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
+                  onClick={handleRetryWrong}
+                  style={{ width: '100%', fontSize: '1.3rem', padding: '18px 40px', borderRadius: '30px', background: 'rgba(0, 212, 255, 0.15)', color: '#00d4ff', border: '2px solid rgba(0, 212, 255, 0.3)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s ease', textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)' }}
                 >
                   Öva fel svar ({wrongPairs.length})
                 </button>
               )}
-              <button
-                style={{
-                  width: '100%',
-                  fontSize: '1.3rem',
-                  padding: '18px 40px',
-                  borderRadius: '30px',
-                  background: 'rgba(0, 212, 255, 0.15)',
-                  color: '#00d4ff',
-                  border: '2px solid rgba(0, 212, 255, 0.3)',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-                }}
-                onClick={() => { playSound('click'); setHasStarted(false); }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
-                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
-                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-              >
-                Avsluta övning
-              </button>
+              <button onClick={() => { playSound('click'); navigate('/main'); }} style={{ width: '100%', fontSize: '1.3rem', padding: '18px 40px', borderRadius: '30px', background: 'rgba(0, 212, 255, 0.15)', color: '#00d4ff', border: '2px solid rgba(0, 212, 255, 0.3)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s ease', textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)' }}>Avsluta övning</button>
             </div>
           </div>
         ) : (
@@ -422,15 +250,7 @@ return (
             {/* Main session content: Flashcard always at top */}
             <Flashcard current={current} onSubmit={handleSubmit} normalize={normalizeAnswer} direction={direction} />
             {(!peppMessage && feedback) && (
-              <div
-                className={feedback.startsWith('✓') ? 'feedback-success' : 'feedback-error'}
-                style={{
-                  marginTop: 20,
-                  textAlign: 'center'
-                }}
-              >
-                {feedback}
-              </div>
+              <div className={feedback.startsWith('✓') ? 'feedback-success' : 'feedback-error'} style={{ marginTop: 20, textAlign: 'center' }}>{feedback}</div>
             )}
             {peppMessage && <StreakMessage streak={null} message={peppMessage} />}
             {/* Progress bar below flashcard */}
@@ -454,41 +274,14 @@ return (
             </div>
             {/* Avsluta övning always at bottom */}
             <div style={{ marginTop: 32, textAlign: 'center' }}>
-              <button
-                onClick={() => { playSound('click'); setHasStarted(false); }}
-                style={{
-                  width: '100%',
-                  fontSize: '1.3rem',
-                  padding: '18px 40px',
-                  borderRadius: '30px',
-                  background: 'rgba(0, 212, 255, 0.15)',
-                  color: '#00d4ff',
-                  border: '2px solid rgba(0, 212, 255, 0.3)',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.25)'
-                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.5)'
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.4)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'
-                  e.currentTarget.style.border = '2px solid rgba(0, 212, 255, 0.3)'
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-              >
+              <button onClick={() => { playSound('click'); navigate('/main'); }} className="modern-button main-action-button" style={{ maxWidth: 340 }}>
                 Avsluta övning
               </button>
             </div>
           </div>
         )}
       </div>
-    )}
-  </div>
-);
+    </div>
+  );
 }
+export default PracticePage;

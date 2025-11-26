@@ -1,63 +1,67 @@
 import React, { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Auth from './components/Auth'
-import PracticePage from './pages/PracticePage'
+
+
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import PracticePage from './pages/PracticePage';
+import ManagePage from './pages/ManagePage';
+import SettingsPage from './pages/SettingsPage';
+import MainPage from './pages/MainPage';
 
 function AppContent() {
-  const { user, loading } = useAuth()
-  const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [showInstallPrompt, setShowInstallPrompt] = useState(false)
+  const { user, loading } = useAuth();
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   useEffect(() => {
     const handler = (e) => {
-      e.preventDefault()
-      setDeferredPrompt(e)
-      // Show install prompt after a short delay
-      setTimeout(() => {
-        setShowInstallPrompt(true)
-      }, 3000)
-    }
-
-    window.addEventListener('beforeinstallprompt', handler)
-
-    return () => window.removeEventListener('beforeinstallprompt', handler)
-  }, [])
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setTimeout(() => setShowInstallPrompt(true), 3000);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return
-
-    deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
-    
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
-      console.log('User accepted the install prompt')
+
     }
-    
-    setDeferredPrompt(null)
-    setShowInstallPrompt(false)
-  }
+    setDeferredPrompt(null);
+    setShowInstallPrompt(false);
+  };
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         height: '100vh',
         fontSize: '24px'
       }}>
         Loading...
       </div>
-    )
+    );
   }
-
   if (!user) {
-    return <Auth />
+    return <Auth />;
   }
 
   return (
     <>
-      <PracticePage />
+      <Routes>
+        <Route path="/" element={<MainPage />} />
+        <Route path="/main" element={<MainPage />} />
+        <Route path="/practice/:list" element={<PracticePage />} />
+        <Route path="/manage" element={<ManagePage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
       {showInstallPrompt && deferredPrompt && (
         <div style={{
           position: 'fixed',
@@ -112,13 +116,15 @@ function AppContent() {
         </div>
       )}
     </>
-  )
+  );
 }
 
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <Router>
+        <AppContent />
+      </Router>
     </AuthProvider>
-  )
+  );
 }
