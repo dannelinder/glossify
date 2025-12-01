@@ -12,19 +12,19 @@ export default function MainPage() {
         Välj din övning och börja plugga!
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', marginTop: 0 }}>
-        <button className="modern-button main-action-button" onClick={() => navigate('/practice/weekly')}>
+        <button id="veckans-glosor-btn" className="modern-button main-action-button" onClick={() => navigate('/practice/weekly')}>
           Veckans glosor
         </button>
-        <button className="modern-button main-action-button" onClick={() => navigate('/practice/all')}>
+        <button id="alla-glosor-btn" className="modern-button main-action-button" onClick={() => navigate('/practice/all')}>
           Alla glosor
         </button>
-        <button className="modern-button main-action-button" onClick={() => navigate('/practice/verbs')}>
+        <button id="verb-btn" className="modern-button main-action-button" onClick={() => navigate('/practice/verbs')}>
           Verb
         </button>
-        <button className="modern-button main-action-button" onClick={() => navigate('/manage')}>
+        <button id="hantera-glosor-btn" className="modern-button main-action-button" onClick={() => navigate('/manage')}>
           Hantera glosor
         </button>
-        <button className="modern-button main-action-button" onClick={() => navigate('/settings')}>
+        <button id="installningar-btn" className="modern-button main-action-button" onClick={() => navigate('/settings')}>
           Inställningar
         </button>
       </div>

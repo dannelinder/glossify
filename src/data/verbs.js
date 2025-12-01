@@ -1,10 +1,10 @@
 // Verbs (Svenska -> Tyska)
 const verbs = [
-  { sv: "göra", ty: "machen" },
   { sv: "besöka", ty: "besuchen" },
-  { sv: "åka/köra", ty: "fahren" },
-  { sv: "vinna", ty: "gewinnen" },
-  { sv: "älska", ty: "lieben" }
+  { sv: "du gör", ty: "du machst" },
+  { sv: "jag åker", ty: "ich fahre" },
+  { sv: "ni vinner", ty: "ihr gewinnt" },
+  { sv: "vi älskar", ty: "wir lieben" }
 ]
 
 export default verbs

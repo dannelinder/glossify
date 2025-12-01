@@ -65,7 +65,7 @@ export default function ManagePage() {
   return (
     <div className="manage-container">
       <div className="card">
-        <h1 className="glossify-header">Hantera glosor</h1>
+        <h2 className="glossify-header">Hantera glosor</h2>
         <p className="manage-description">
           Från svenska till det språk du valt i inställningar (ett ord per rad)<br />
           <code className="example-code">svenska;engelska</code>, <code className="example-code">svenska;tyska</code> eller <code className="example-code">svenska;spanska</code>
@@ -109,12 +109,14 @@ export default function ManagePage() {
 
         <div className="manage-actions">
           <button
+            id="spara-btn"
             className="modern-button main-action-button"
             onClick={handleSave}
           >
             Spara
           </button>
           <button
+            id="tillbaka-btn"
             className="modern-button main-action-button"
             onClick={() => navigate('/practice')}
           >

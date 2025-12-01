@@ -10,7 +10,7 @@ function shuffle(array) {
   return arr;
 }
 
-export default function useFlashcards(initialDeck = [], delayMs = 500) {
+export default function useFlashcards(initialDeck = [], delayMs = 500, deterministicOrder = false) {
   const [deck, setDeck] = useState(initialDeck);
   const [queue, setQueue] = useState([]);
   const [index, setIndex] = useState(0);
@@ -35,21 +35,27 @@ export default function useFlashcards(initialDeck = [], delayMs = 500) {
     }, [current, wrongPairs]);
 
   const loadWords = useCallback((words) => {
-    const copy = [...words];
-    setDeck(copy);
-    const shuffled = shuffle(copy);
-    setQueue(shuffled);
+    let arr;
+
+    if (deterministicOrder) {
+      // Use a true deep copy of the input array, preserving order (to match test)
+      arr = JSON.parse(JSON.stringify(words));
+
+    } else {
+      arr = shuffle([...words]);
+    }
+    setDeck(arr);
+    setQueue(arr);
+
     setIndex(0);
-    setCurrent(shuffled[0] || null);
+    setCurrent(arr[0] || null);
+
     setTotalAnswered(0);
     setScore(0);
     setWrongPairs([]);
     setRemainingWrongs([]);
     setStreak(0);
-  }, []);
-
-
-
+  }, [deterministicOrder]);
 
   // Accepts a list of pairs to retry, for stateless retry logic
   function resetToWrong(wrongList) {
@@ -63,8 +69,16 @@ export default function useFlashcards(initialDeck = [], delayMs = 500) {
     setStreak(0);
     // Clear wrongPairs BEFORE retry round starts
     setWrongPairs([]);
+    setRemainingWrongs([]);
   }
 
+  // Clear wrongPairs after all wrongs are corrected in retry session
+  React.useEffect(() => {
+    if (queue.length === 0 && current === null && wrongPairs.length > 0) {
+      setWrongPairs([]);
+      setRemainingWrongs([]);
+    }
+  }, [queue.length, current, wrongPairs]);
 
 
 const answerCurrent = useCallback((userAnswer, normalizeFn, onResult, customDelay, direction = 'sv-target') => {

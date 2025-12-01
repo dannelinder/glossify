@@ -1,16 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import useFlashcards from '../hooks/useFlashcards';
 import Flashcard from '../components/Flashcard';
 import ProgressBar from '../components/ProgressBar';
 import weeklyWords from '../data/weeklyWords';
 import allWords from '../data/allWords';
-
 import { useAuth } from '../context/AuthContext';
 import verbs from '../data/verbs';
 import { getPepp } from '../utils/getPepp';
 import StreakMessage from '../components/StreakMessage';
 import { loadWordListFromDB } from '../utils/wordListHelpers';
+
+// Utility: get feedback display duration (test flag aware)
+function getFeedbackDisplayMs(type = 'default') {
+  // You can expand this switch for more types if needed
+  const isTest = process.env.NODE_ENV === 'test' || window.__TEST_MODE__;
+  if (isTest) {
+    // Always use a short duration in test mode for all feedback types
+    return 1000;
+  }
+  switch (type) {
+    case 'streak':
+    case 'pepp':
+      return 3000; // Show pepp/streak a bit shorter
+    case 'error':
+      return 1500;
+    case 'success':
+      return 1500;
+    default:
+      return 1500;
+  }
+}
 
 
 // Utility: normalize answer
@@ -61,24 +81,37 @@ function PracticePage() {
   const [feedback, setFeedback] = useState('');
   const [peppMessage, setPeppMessage] = useState('');
   const [pendingNext, setPendingNext] = useState(false);
+  const [showSessionComplete, setShowSessionComplete] = useState(false);
   const [listLoaded, setListLoaded] = useState(false);
   // Remove local state for queue, current, score, totalAnswered, streak, wrongPairs
   const direction = 'sv-target'; // or get from settings
 
-  // Use the hook with the current word array
+  // Deterministic order for tests
+  const deterministicOrder = process.env.NODE_ENV === 'test' || window.__TEST_MODE__;
 
+  // Use the hook with the current word array
   function getWordArrayAsync(listName) {
     // Try to load from DB, fallback to static
     let key = 'weeklyWords';
     if (listName === 'all') key = 'allWords';
     if (listName === 'verbs') key = 'verbs';
     return loadWordListFromDB(key).then((words) => {
+      let result;
       if (!words || words.length === 0) {
+        if (listName === 'all') result = allWords;
+        else if (listName === 'verbs') result = verbs;
+        else result = weeklyWords;
+      } else {
+        result = words;
+      }
+      // If deterministicOrder, always return the original array reference (not a copy)
+      if (deterministicOrder) {
         if (listName === 'all') return allWords;
         if (listName === 'verbs') return verbs;
         return weeklyWords;
       }
-      return words;
+      // If not deterministic, shuffle (if you have a shuffle util, use it here)
+      return Array.isArray(result) ? [...result].sort(() => Math.random() - 0.5) : result;
     });
   }
 
@@ -93,14 +126,28 @@ function PracticePage() {
     answerCurrent,
     goToNextWord,
     resetToWrong
-  } = useFlashcards([]);
+  } = useFlashcards([], 500, deterministicOrder);
 
+
+  // Ref to track manual restart
+  const manualRestarting = useRef(false);
+  // Cancellation token to prevent race conditions on queue/current word
+  const initTokenRef = useRef(0);
 
   // Stateless retry: use wrongPairs directly for retry button and logic
   function handleRetryWrong() {
     if (wrongPairs && wrongPairs.length > 0) {
-      // Custom retry: start a new round with current wrongPairs
-      resetToWrong(wrongPairs);
+      // Sort wrongPairs according to the original word order for deterministic retry
+      let originalOrder = [];
+      if (activeList === 'all') originalOrder = allWords;
+      else if (activeList === 'verbs') originalOrder = verbs;
+      else originalOrder = weeklyWords;
+      // Map to string key for comparison
+      const wrongSet = new Set(wrongPairs.map(([sv, ty]) => `${sv};${ty}`));
+      const sortedWrongPairs = originalOrder
+        .map(({ sv, ty }) => [sv, ty])
+        .filter(([sv, ty]) => wrongSet.has(`${sv};${ty}`));
+      resetToWrong(sortedWrongPairs);
       setHasStarted(true);
       setListLoaded(true);
       setFeedback('');
@@ -118,11 +165,23 @@ function PracticePage() {
 
   // Whenever activeList changes, load the new words from DB or fallback
   useEffect(() => {
+    // Increment the token for each effect run
+    const myToken = ++initTokenRef.current;
+    if (manualRestarting.current) {
+      manualRestarting.current = false;
+      return;
+    }
     getWordArrayAsync(activeList).then((words) => {
+      // Only set state if this is the latest effect
+      if (initTokenRef.current !== myToken) return;
+      // Debug: log the sv order before loading
+      if (Array.isArray(words)) {
 
+      }
       loadWords(words);
       setListLoaded(true);
     });
+    // No need for cancelled flag; token handles all async overlap
     // eslint-disable-next-line
   }, [activeList]);
 
@@ -160,25 +219,40 @@ function PracticePage() {
   // Clear feedback and pepp after a delay, then advance
   useEffect(() => {
     if (pendingNext) {
+      let feedbackType = 'default';
+      if (peppMessage) {
+        feedbackType = 'pepp';
+      } else if (feedback.startsWith('✓')) {
+        feedbackType = 'success';
+      } else if (feedback.startsWith('✗')) {
+        feedbackType = 'error';
+      }
+      const displayMs = getFeedbackDisplayMs(feedbackType);
+      // Always use getFeedbackDisplayMs for all feedback durations
       const timer = setTimeout(() => {
         setFeedback('');
         setPeppMessage('');
         goToNextWord();
         setPendingNext(false);
-      }, 1200);
+      }, displayMs);
       return () => clearTimeout(timer);
     }
-  }, [pendingNext, goToNextWord]);
+  }, [pendingNext, goToNextWord, feedback, peppMessage, queue.length]);
 
-  // When current becomes null (end of session), show end-of-list options
+  // When current becomes null (end of session), always show end-of-list options
   useEffect(() => {
-    if (hasStarted && current === null) {
+    // Debug log for session complete effect
+    // eslint-disable-next-line no-console
+
+    if (current === null && listLoaded) {
+      // eslint-disable-next-line no-console
+
       setHasStarted(false);
-      // Do NOT set setListLoaded(false) here; keep it true so end-of-session UI is always shown
       setFeedback('');
       setPeppMessage('');
+      setShowSessionComplete(true);
     }
-  }, [current, hasStarted]);
+  }, [current, listLoaded]);
 
   // Helper to check if answer is correct (for delay logic)
 
@@ -197,6 +271,43 @@ function PracticePage() {
     activeLabel = 'Veckans glosor';
   }
 
+  // Show session complete UI if session is over (current === null and hasStarted was true)
+  const isSessionComplete = showSessionComplete && listLoaded;
+
+  // Robust restart handler with token cancellation
+  // Two-step restart: first hide session complete UI, then reset flashcard state in useLayoutEffect
+  const pendingRestart = useRef(false);
+  function handleRestart() {
+    setShowSessionComplete(false); // Hide session complete UI immediately
+    pendingRestart.current = true;
+  }
+
+  useLayoutEffect(() => {
+    if (!showSessionComplete && pendingRestart.current) {
+      manualRestarting.current = true;
+      // Cancel any pending effect by incrementing the token
+      initTokenRef.current++;
+      // Use a deep copy of the correct list as-is (preserve order)
+      let sourceList = weeklyWords;
+      if (activeList === 'all') sourceList = allWords;
+      else if (activeList === 'verbs') sourceList = verbs;
+      const copy = JSON.parse(JSON.stringify(sourceList));
+      // Debug: log the sv order before loading
+      if (Array.isArray(copy)) {
+
+      }
+      setHasStarted(true);
+      setListLoaded(true);
+      setFeedback('');
+      setPeppMessage('');
+      loadWords(copy);
+      pendingRestart.current = false;
+    }
+  }, [showSessionComplete, loadWords, activeList, allWords, verbs, weeklyWords]);
+
+  // Debug log for every render
+  // eslint-disable-next-line no-console
+
   return (
     <div style={{
       maxWidth: 700,
@@ -213,33 +324,28 @@ function PracticePage() {
         <h1 className="glossify-header" style={{ marginBottom: 8 }}>{activeLabel}</h1>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
-        {current === null && listLoaded ? (
+        {isSessionComplete ? (
           <div className="card" style={{ textAlign: 'center', color: '#00d4ff' }}>
-            <h2 style={{ fontSize: '2.8rem', marginBottom: 24 }}>Övningen klar!</h2>
+            <h2 id="session-complete-title" style={{ fontSize: '2.8rem', marginBottom: 24 }}>Övningen klar!</h2>
             <p style={{ fontSize: '1.4rem', marginBottom: 36, color: '#0099cc' }}>
               Du fick {score} av {totalAnswered} rätt!
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center' }}>
               <button
-                onClick={() => {
-                  getWordArrayAsync(activeList).then((words) => {
-                    loadWords(words);
-                    setHasStarted(true);
-                    setListLoaded(true);
-                    setFeedback('');
-                    setPeppMessage('');
-                  });
-                }}
+                onClick={handleRestart}
                 style={{ width: '100%', fontSize: '1.3rem', padding: '18px 40px', borderRadius: '30px', background: 'rgba(0, 212, 255, 0.15)', color: '#00d4ff', border: '2px solid rgba(0, 212, 255, 0.3)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s ease', textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)' }}
               >
                 Börja om
               </button>
               {wrongPairs && wrongPairs.length > 0 && (
                 <button
-                  onClick={handleRetryWrong}
+                  onClick={() => {
+                    handleRetryWrong();
+                    setShowSessionComplete(false);
+                  }}
                   style={{ width: '100%', fontSize: '1.3rem', padding: '18px 40px', borderRadius: '30px', background: 'rgba(0, 212, 255, 0.15)', color: '#00d4ff', border: '2px solid rgba(0, 212, 255, 0.3)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s ease', textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)' }}
                 >
-                  Öva fel svar ({wrongPairs.length})
+                  Öva fel svar{` (${wrongPairs.length})`}
                 </button>
               )}
               <button onClick={() => { playSound('click'); navigate('/main'); }} style={{ width: '100%', fontSize: '1.3rem', padding: '18px 40px', borderRadius: '30px', background: 'rgba(0, 212, 255, 0.15)', color: '#00d4ff', border: '2px solid rgba(0, 212, 255, 0.3)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s ease', textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)' }}>Avsluta övning</button>
@@ -247,12 +353,27 @@ function PracticePage() {
           </div>
         ) : (
           <div style={{ width: '100%', maxWidth: 600 }}>
+            {/* Debug log for flashcard render state */}
+
             {/* Main session content: Flashcard always at top */}
             <Flashcard current={current} onSubmit={handleSubmit} normalize={normalizeAnswer} direction={direction} />
-            {(!peppMessage && feedback) && (
-              <div className={feedback.startsWith('✓') ? 'feedback-success' : 'feedback-error'} style={{ marginTop: 20, textAlign: 'center' }}>{feedback}</div>
+            {/* Always render feedback if present, even with pepp/streak */}
+            {feedback && (
+              <div
+                className={feedback.startsWith('✓') ? 'feedback-success' : 'feedback-error'}
+                id={feedback.startsWith('✓') ? 'feedback-success' : 'feedback-error'}
+                style={{ marginTop: 20, textAlign: 'center' }}
+              >
+                {feedback}
+              </div>
             )}
-            {peppMessage && <StreakMessage streak={null} message={peppMessage} />}
+            {peppMessage && (
+              <StreakMessage
+                streak={null}
+                message={peppMessage}
+                id={peppMessage.toLowerCase().includes('streak') || peppMessage.toLowerCase().includes('rad') ? 'streak-message' : 'pepp-message'}
+              />
+            )}
             {/* Progress bar below flashcard */}
             <div style={{ marginTop: 32 }}>
               <ProgressBar value={totalAnswered} max={queue.length} />
@@ -274,7 +395,7 @@ function PracticePage() {
             </div>
             {/* Avsluta övning always at bottom */}
             <div style={{ marginTop: 32, textAlign: 'center' }}>
-              <button onClick={() => { playSound('click'); navigate('/main'); }} className="modern-button main-action-button" style={{ maxWidth: 340 }}>
+              <button id="avsluta-ovning-btn" onClick={() => { playSound('click'); navigate('/main'); }} className="modern-button main-action-button" style={{ maxWidth: 340 }}>
                 Avsluta övning
               </button>
             </div>

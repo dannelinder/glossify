@@ -25,17 +25,21 @@ onSubmit(input)
 
 return (
 <div className="card" style={{ textAlign: 'center' }}>
-  <div style={{ 
-    fontSize: '2.3rem', 
-    marginBottom: 16, 
-    fontWeight: '700',
-    color: '#00d4ff',
-    textShadow: '0 2px 8px rgba(0, 212, 255, 0.4)'
-  }}>
+  <div
+    id="flashcard-front"
+    style={{ 
+      fontSize: '2.3rem', 
+      marginBottom: 16, 
+      fontWeight: '700',
+      color: '#00d4ff',
+      textShadow: '0 2px 8px rgba(0, 212, 255, 0.4)'
+    }}
+  >
     {question}
   </div>
   <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
     <input
+      id="svar"
       autoFocus
       value={input}
       onChange={(e) => setInput(e.target.value)}
@@ -57,6 +61,7 @@ return (
       onBlur={(e) => e.target.style.border = '2px solid rgba(0, 212, 255, 0.3)'}
     />
     <button
+      id="svara-btn"
       type="submit"
       style={{
         width: '100%',

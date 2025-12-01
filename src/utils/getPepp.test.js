@@ -1,37 +1,27 @@
-import { getPepp } from '../utils/getPepp';
+const { getPepp } = require('../utils/getPepp');
 
 describe('getPepp utility', () => {
-  test('returns encouraging message for milestone streaks', () => {
-    // Milestones always return a message
-    expect(getPepp(3)).toBeTruthy();
-    expect(getPepp(5)).toBeTruthy();
-    expect(getPepp(10)).toBeTruthy();
-    expect(getPepp(15)).toBeTruthy();
-    expect(getPepp(20)).toBeTruthy();
-    expect(getPepp(25)).toBeTruthy();
+  const milestones = [3, 5, 7, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+
+  test('returns encouraging message for all milestone streaks', () => {
+    for (const streak of milestones) {
+      const msg = getPepp(streak);
+      expect(typeof msg).toBe('string');
+      expect(msg.length).toBeGreaterThan(0);
+    }
   });
 
-  test('may return message for non-milestone streaks (20% chance)', () => {
-    // Non-milestones have 20% chance, so we can't guarantee null
-    // Just test that it returns either a string or null
-    const result = getPepp(1);
-    expect(typeof result === 'string' || result === null).toBe(true);
+  test('returns null for non-milestone streaks', () => {
+    // Test a range of non-milestone values
+    for (const streak of [0, 1, 2, 4, 6, 8, 9, 11, 14, 16, 21, 49, 51, 100]) {
+      expect(getPepp(streak)).toBeNull();
+    }
   });
 
-  test('returns different messages for different milestones', () => {
-    const msg3 = getPepp(3);
-    const msg5 = getPepp(5);
-    const msg10 = getPepp(10);
-    
-    // All milestones should return messages
-    expect(msg3).toBeTruthy();
-    expect(msg5).toBeTruthy();
-    expect(msg10).toBeTruthy();
-  });
-
-  test('milestone messages are in Swedish', () => {
-    const msg = getPepp(5);
-    // Check for Swedish characters or common Swedish words
-    expect(msg).toMatch(/å|ä|ö|bra|grym|stark|raka|skill/i);
+  test('milestone messages contain Swedish or motivational words', () => {
+    for (const streak of milestones) {
+      const msg = getPepp(streak);
+      expect(msg).toMatch(/rad|bra|grym|stark|raka|skill|jobbat|snyggt|imponerande|fokus|flow|framsteg|nivå|tänkt|rätt|exakt|snabbare|stolt|insats|rytm|driv|fullträff|hjärna|överraskar|high five|fett/i);
+    }
   });
 });

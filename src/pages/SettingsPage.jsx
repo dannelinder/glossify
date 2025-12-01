@@ -128,8 +128,9 @@ export default function SettingsPage() {
         <div className="settings-section">
           <h3>Ljudeffekter</h3>
           <p className="settings-description">Spela ljud vid rätt och fel svar</p>
-          <label className="toggle-switch">
+          <label className="toggle-switch" htmlFor="toggle-sound-enabled">
             <input
+              id="toggle-sound-enabled"
               type="checkbox"
               checked={soundEnabled}
               onChange={(e) => setSoundEnabled(e.target.checked)}
@@ -142,8 +143,9 @@ export default function SettingsPage() {
         <div className="settings-section">
           <h3>Skiftlägeskänslig</h3>
           <p className="settings-description">Kräv exakt matchning av stora och små bokstäver</p>
-          <label className="toggle-switch">
+          <label className="toggle-switch" htmlFor="toggle-case-sensitive">
             <input
+              id="toggle-case-sensitive"
               type="checkbox"
               checked={caseSensitive}
               onChange={(e) => setCaseSensitive(e.target.checked)}
@@ -162,6 +164,7 @@ export default function SettingsPage() {
         <div className="settings-actions" style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', marginTop: 0 }}>
           <button
             className="modern-button main-action-button"
+            data-testid="signout-btn"
             onClick={() => signOut()}
           >
             Logga ut

@@ -53,42 +53,40 @@ const pepp = [
   "*Fett bra gjort*."
 ]
 
-const rare_pepp = {
-  3: [
-    "Nu händer det grejer!",
-    "Tre i rad? Du är varm nu!"
-  ],
-  5: [
-    "Fem raka! Det här är inte tur längre.",
-    "Du har precis gått från 'okej' till 'riktigt bra'."
-  ],
-  10: [
-    "TIO i rad?! Okej, nu snackar vi skill.",
-    "Du spelar på hard mode och ser ändå lugn ut."
-  ],
-  15: [
-    "15 raka – det här borde ge achievements.",
-    "Respekt. Det här är överkurs-nivå."
-  ],
-  20: [
-    "20 i rad? Det är ju nästan löjligt bra.",
-    "Du gör det här som om det vore ingenting."
-  ],
-  25: [
-    "25 raka!? Det här är 'legendary tier'.",
-    "Okej… nu är det officiellt: du är OP."
-  ]
+
+const streakMilestones = [3, 5, 7, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+const streakPhrases = {
+  3: ["Tre i rad!"],
+  5: ["Fem raka!"],
+  7: ["Sju i rad!"],
+  10: ["Tio i rad!"],
+  15: ["Femton i rad!"],
+  20: ["Tjugo i rad!"],
+  25: ["Tjugofem i rad!"],
+  30: ["Tretti i rad!"],
+  35: ["Trettiofem i rad!"],
+  40: ["Fyrtio i rad!"],
+  45: ["Fyrtiofem i rad!"],
+  50: ["Femtio i rad!"],
+};
+
+
+function getPepp(streak) {
+  // Only trigger on defined milestones
+  if (streakMilestones.includes(streak)) {
+    const isTest = typeof process !== 'undefined' && (process.env.NODE_ENV === 'test' || typeof window !== 'undefined' && window.__TEST_MODE__);
+    const phrases = streakPhrases[streak] || [];
+    let milestoneMsg, peppMsg;
+    if (isTest) {
+      milestoneMsg = phrases.length > 0 ? phrases[0] : `Du har ${streak} i rad!`;
+      peppMsg = pepp[0];
+    } else {
+      milestoneMsg = phrases.length > 0 ? phrases[Math.floor(Math.random() * phrases.length)] : `Du har ${streak} i rad!`;
+      peppMsg = pepp[Math.floor(Math.random() * pepp.length)];
+    }
+    return `${milestoneMsg} ${peppMsg}`;
+  }
+  return null;
 }
 
-export function getPepp(streak) {
-  // Check for streak milestone first
-  if (rare_pepp[streak]) {
-    const arr = rare_pepp[streak]
-    return arr[Math.floor(Math.random() * arr.length)]
-  }
-  // 20% chance to return a random pepp
-  if (Math.random() < 0.2) {
-    return pepp[Math.floor(Math.random() * pepp.length)]
-  }
-  return null
-}
+module.exports = { getPepp };

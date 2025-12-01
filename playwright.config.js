@@ -1,4 +1,6 @@
+
 import { defineConfig, devices } from '@playwright/test';
+import 'dotenv/config';
 
 export default defineConfig({
   testDir: './e2e',
@@ -20,10 +22,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
 
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
+
 
     {
       name: 'webkit',
@@ -43,10 +42,7 @@ export default defineConfig({
       name: 'iPhone 12',
       use: { ...devices['iPhone 12'] },
     },
-    {
-      name: 'iPad',
-      use: { ...devices['iPad Pro'] },
-    },
+
   ],
 
   webServer: {

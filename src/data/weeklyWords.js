@@ -1,10 +1,10 @@
 // Weekly words (Svenska -> Tyska)
 const weeklyWords = [
-{ sv: "göra", ty: "machen" },
-{ sv: "besöka", ty: "besuchen" },
-{ sv: "åka/köra", ty: "fahren" },
-{ sv: "vinna", ty: "gewinnen" },
-{ sv: "älska", ty: "lieben" }
+  { sv: "ansiktet", ty: "das Gesicht" },
+  { sv: "fingret", ty: "der Finger" },
+  { sv: "huvudet", ty: "der Kopf" },
+  { sv: "munnen", ty: "der Mund" },
+  { sv: "pannan", ty: "die Stirn" }
 ]
 
 
