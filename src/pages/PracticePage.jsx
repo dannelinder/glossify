@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
 import { useNavigate, useParams } from 'react-router-dom';
 import useFlashcards from '../hooks/useFlashcards';
 import Flashcard from '../components/Flashcard';
@@ -50,7 +51,7 @@ function normalizeAnswer(str) {
 }
 
 // Utility: play melody-based sound effects
-function playSound(name, soundEnabled = true) {
+function playSound(name, soundEnabled = true, volume = 1) {
   if (!soundEnabled) return;
   // Map logical sound names to actual file names
   const soundMap = {
@@ -63,6 +64,7 @@ function playSound(name, soundEnabled = true) {
   const file = soundMap[name] || name;
   const audio = new window.Audio(`/sounds/${file}.wav`);
   audio.currentTime = 0;
+  audio.volume = volume;
   audio.onerror = function(e) {
     console.warn(`Sound file not found or not supported: /sounds/${file}.wav`, e);
   };
@@ -85,6 +87,26 @@ function PracticePage() {
   const [listLoaded, setListLoaded] = useState(false);
   // Remove local state for queue, current, score, totalAnswered, streak, wrongPairs
   const direction = 'sv-target'; // or get from settings
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [volume, setVolume] = useState(0.2);
+  // Load user settings from Supabase
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchSettings() {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      if (isMounted && data) {
+        setSoundEnabled(data.sound_enabled ?? true);
+        setVolume(typeof data.volume === 'number' ? data.volume : 0.2);
+      }
+    }
+    fetchSettings();
+    return () => { isMounted = false; };
+  }, [user]);
 
   // Deterministic order for tests
   const deterministicOrder = process.env.NODE_ENV === 'test' || window.__TEST_MODE__;
@@ -155,8 +177,6 @@ function PracticePage() {
     }
   }
 
-
-  // Debug: log wrongPairs at end of session
   useEffect(() => {
     if (current === null && !hasStarted && listLoaded) {
 
@@ -174,7 +194,6 @@ function PracticePage() {
     getWordArrayAsync(activeList).then((words) => {
       // Only set state if this is the latest effect
       if (initTokenRef.current !== myToken) return;
-      // Debug: log the sv order before loading
       if (Array.isArray(words)) {
 
       }
@@ -196,14 +215,14 @@ function PracticePage() {
           const pepp = getPepp(newStreak);
           if (pepp) {
             setPeppMessage(pepp);
-            playSound('pepp');
+            playSound('pepp', soundEnabled, volume);
           } else {
             setPeppMessage('');
-            playSound('success');
+            playSound('success', soundEnabled, volume);
           }
           setFeedback('✓ Rätt!');
         } else {
-          playSound('error');
+          playSound('error', soundEnabled, volume);
           setPeppMessage('');
           const correctAnswer = direction === 'sv-target' ? card.ty : card.sv;
           setFeedback(`✗ Fel, rätta svaret var "${correctAnswer}"`);
@@ -241,20 +260,13 @@ function PracticePage() {
 
   // When current becomes null (end of session), always show end-of-list options
   useEffect(() => {
-    // Debug log for session complete effect
-    // eslint-disable-next-line no-console
-
     if (current === null && listLoaded) {
-      // eslint-disable-next-line no-console
-
       setHasStarted(false);
       setFeedback('');
       setPeppMessage('');
       setShowSessionComplete(true);
     }
   }, [current, listLoaded]);
-
-  // Helper to check if answer is correct (for delay logic)
 
   // Map route param to user-friendly label
   const listLabelMap = {
@@ -292,7 +304,6 @@ function PracticePage() {
       if (activeList === 'all') sourceList = allWords;
       else if (activeList === 'verbs') sourceList = verbs;
       const copy = JSON.parse(JSON.stringify(sourceList));
-      // Debug: log the sv order before loading
       if (Array.isArray(copy)) {
 
       }
@@ -304,9 +315,6 @@ function PracticePage() {
       pendingRestart.current = false;
     }
   }, [showSessionComplete, loadWords, activeList, allWords, verbs, weeklyWords]);
-
-  // Debug log for every render
-  // eslint-disable-next-line no-console
 
   return (
     <div style={{
@@ -348,13 +356,11 @@ function PracticePage() {
                   Öva fel svar{` (${wrongPairs.length})`}
                 </button>
               )}
-              <button onClick={() => { playSound('click'); navigate('/main'); }} style={{ width: '100%', fontSize: '1.3rem', padding: '18px 40px', borderRadius: '30px', background: 'rgba(0, 212, 255, 0.15)', color: '#00d4ff', border: '2px solid rgba(0, 212, 255, 0.3)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s ease', textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)' }}>Avsluta övning</button>
+              <button onClick={() => { playSound('click', soundEnabled, volume); navigate('/main'); }} style={{ width: '100%', fontSize: '1.3rem', padding: '18px 40px', borderRadius: '30px', background: 'rgba(0, 212, 255, 0.15)', color: '#00d4ff', border: '2px solid rgba(0, 212, 255, 0.3)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s ease', textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)' }}>Avsluta övning</button>
             </div>
           </div>
         ) : (
           <div style={{ width: '100%', maxWidth: 600 }}>
-            {/* Debug log for flashcard render state */}
-
             {/* Main session content: Flashcard always at top */}
             <Flashcard current={current} onSubmit={handleSubmit} normalize={normalizeAnswer} direction={direction} />
             {/* Always render feedback if present, even with pepp/streak */}
@@ -395,7 +401,7 @@ function PracticePage() {
             </div>
             {/* Avsluta övning always at bottom */}
             <div style={{ marginTop: 32, textAlign: 'center' }}>
-              <button id="avsluta-ovning-btn" onClick={() => { playSound('click'); navigate('/main'); }} className="modern-button main-action-button" style={{ maxWidth: 340 }}>
+              <button id="avsluta-ovning-btn" onClick={() => { playSound('click', soundEnabled, volume); navigate('/main'); }} className="modern-button main-action-button" style={{ maxWidth: 340 }}>
                 Avsluta övning
               </button>
             </div>

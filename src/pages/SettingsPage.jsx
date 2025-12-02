@@ -16,6 +16,7 @@ export default function SettingsPage() {
   const [targetLanguage, setTargetLanguage] = useState('en')
   const [direction, setDirection] = useState('sv-target')
   const [soundEnabled, setSoundEnabled] = useState(true)
+  const [volume, setVolume] = useState(0.2) // 0.2 = 20%
   const [caseSensitive, setCaseSensitive] = useState(true)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
@@ -35,6 +36,7 @@ export default function SettingsPage() {
         setDirection(data.direction || 'sv-target')
         setSoundEnabled(data.sound_enabled ?? true)
         setCaseSensitive(data.case_sensitive ?? true)
+        setVolume(typeof data.volume === 'number' ? data.volume : 0.2)
       }
       setLoading(false)
     } catch (e) {
@@ -59,6 +61,7 @@ export default function SettingsPage() {
           direction: direction,
           sound_enabled: soundEnabled,
           case_sensitive: caseSensitive,
+          volume: volume,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'user_id'
@@ -138,6 +141,22 @@ export default function SettingsPage() {
             <span className="slider"></span>
             <span className="toggle-label">{soundEnabled ? 'På' : 'Av'}</span>
           </label>
+          <div style={{ marginTop: 18 }}>
+            <label htmlFor="volume-slider" style={{ color: '#fff', fontWeight: 600, marginRight: 12 }}>
+              Volym:
+            </label>
+            <input
+              id="volume-slider"
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={volume}
+              onChange={e => setVolume(Number(e.target.value))}
+              style={{ width: 180, verticalAlign: 'middle' }}
+            />
+            <span style={{ color: '#00d4ff', marginLeft: 10 }}>{Math.round(volume * 100)}%</span>
+          </div>
         </div>
 
         <div className="settings-section">
