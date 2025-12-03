@@ -1,8 +1,10 @@
 {
-  "name": "glossify",
-  "version": "1.0.0",
-  "private": true,
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^24.10.1"
+  },
   "dependencies": {
+    "dotenv": "^17.2.3",
     "@supabase/supabase-js": "^2.84.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",

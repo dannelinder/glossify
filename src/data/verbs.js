@@ -7,4 +7,5 @@ const verbs = [
   { sv: "vi älskar", ty: "wir lieben" }
 ]
 
+
 export default verbs
