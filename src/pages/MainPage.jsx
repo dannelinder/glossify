@@ -24,9 +24,7 @@ export default function MainPage() {
         <button id="hantera-glosor-btn" className="modern-button main-action-button" onClick={() => navigate('/manage')}>
           Hantera glosor
         </button>
-        <button id="installningar-btn" className="modern-button main-action-button" onClick={() => navigate('/settings')}>
-          Inställningar
-        </button>
+        <button id="installningar-btn" className="modern-button main-action-button" onClick={() => navigate('/settings')}>Inställningar</button>
       </div>
     </div>
   );

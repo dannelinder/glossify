@@ -9,6 +9,7 @@ import ManagePage from './pages/ManagePage';
 import SettingsPage from './pages/SettingsPage';
 import MainPage from './pages/MainPage';
 
+
 function AppContent() {
   const { user, loading } = useAuth();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -60,6 +61,7 @@ function AppContent() {
         <Route path="/practice/:list" element={<PracticePage />} />
         <Route path="/manage" element={<ManagePage />} />
         <Route path="/settings" element={<SettingsPage />} />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {showInstallPrompt && deferredPrompt && (

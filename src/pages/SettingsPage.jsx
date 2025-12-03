@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
@@ -18,6 +19,8 @@ export default function SettingsPage() {
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [volume, setVolume] = useState(0.2) // 0.2 = 20%
   const [caseSensitive, setCaseSensitive] = useState(true)
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -37,6 +40,7 @@ export default function SettingsPage() {
         setSoundEnabled(data.sound_enabled ?? true)
         setCaseSensitive(data.case_sensitive ?? true)
         setVolume(typeof data.volume === 'number' ? data.volume : 0.2)
+        setAvatarUrl(data.avatar_url || '');
       }
       setLoading(false)
     } catch (e) {
@@ -45,6 +49,51 @@ export default function SettingsPage() {
     }
   }, [user])
 
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    // Validate file size (max 1 MB)
+    const maxSize = 1024 * 1024; // 1 MB
+    if (file.size > maxSize) {
+      setMessage('Filen är för stor (max 1 MB)');
+      return;
+    }
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      setMessage('Endast JPG och PNG tillåts');
+      return;
+    }
+    setUploading(true);
+    let ext = 'jpg';
+    if (file.type === 'image/png') ext = 'png';
+    // Remove previous avatar if exists (by URL in user_settings)
+    let previousAvatarUrl = avatarUrl;
+    if (previousAvatarUrl) {
+      // Extract filename from URL
+      const parts = previousAvatarUrl.split('/');
+      const prevFile = parts[parts.length - 1];
+      await supabase.storage.from('avatars').remove([prevFile]);
+    }
+    // Generate unique filename
+    const fileName = `${user.id}-${uuidv4()}.${ext}`;
+    // Upload new avatar
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file);
+    if (uploadError) {
+      setMessage('Fel vid uppladdning av avatar: ' + (uploadError.message || 'okänt fel'));
+      setUploading(false);
+      return;
+    }
+    const { publicUrl } = supabase.storage.from('avatars').getPublicUrl(fileName).data;
+    setAvatarUrl(publicUrl);
+    // Save avatar URL to user_settings
+    await supabase.from('user_settings').update({ avatar_url: publicUrl }).eq('user_id', user.id);
+    setUploading(false);
+    setMessage('Avatar uppdaterad!');
+  };
+
   useEffect(() => {
     loadSettings()
   }, [loadSettings])
@@ -52,7 +101,6 @@ export default function SettingsPage() {
   const saveSettings = async () => {
     try {
       setMessage('Sparar...')
-      
       const { error } = await supabase
         .from('user_settings')
         .upsert({
@@ -62,13 +110,12 @@ export default function SettingsPage() {
           sound_enabled: soundEnabled,
           case_sensitive: caseSensitive,
           volume: volume,
+          avatar_url: avatarUrl,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'user_id'
         })
-
       if (error) throw error
-
       setMessage('✓ Inställningar sparade!')
       setTimeout(() => setMessage(''), 3000)
     } catch (error) {
@@ -91,6 +138,46 @@ export default function SettingsPage() {
     <div className="settings-container">
       <div className="settings-card">
         <h1 className="glossify-header">Inställningar</h1>
+
+        {/* Profile section */}
+        <div className="settings-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
+          <img
+            src={avatarUrl || '/default-avatar.png'}
+            alt="Avatar"
+            className="avatar-img"
+            width={96}
+            height={96}
+            style={{ borderRadius: '50%', border: '3px solid #00d4ff', marginBottom: 12, background: '#fff' }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <label style={{ display: 'inline-block', cursor: uploading ? 'not-allowed' : 'pointer', marginBottom: 8 }}>
+              <span style={{
+                display: 'inline-block',
+                background: '#00d4ff',
+                color: '#112D54',
+                padding: '8px 18px',
+                borderRadius: '8px',
+                fontWeight: 600,
+                fontSize: 15,
+                opacity: uploading ? 0.6 : 1
+              }}>
+                Välj bild
+              </span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={handleAvatarChange}
+                disabled={uploading}
+                style={{ display: 'none' }}
+              />
+            </label>
+          </div>
+          <div style={{ color: '#aaa', fontSize: 13, marginBottom: 4 }}>
+            Max 1 MB. Tillåtna format: JPG, PNG.
+          </div>
+          {uploading && <span>Laddar upp...</span>}
+          <div style={{ color: '#fff', fontWeight: 600, marginTop: 8 }}>Email: {user.email}</div>
+        </div>
 
         <div className="settings-section">
           <h3>Språk</h3>

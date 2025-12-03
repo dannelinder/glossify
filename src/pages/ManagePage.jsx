@@ -130,7 +130,7 @@ export default function ManagePage() {
           </div>
         )}
 
-        {/* Buttons moved above, duplicate removed */}
+
       </div>
     </div>
   );

@@ -17,7 +17,7 @@ h1, p {
   background: #112D54;
   border-radius: 20px;
   padding: 40px;
-  /* box-shadow removed */
+
 }
 
 
@@ -30,7 +30,7 @@ h1, p {
   padding-bottom: 32px;
 }
 
-/* .settings-section:last-of-type removed (was empty) */
+
 
 .settings-section h3 {
 }

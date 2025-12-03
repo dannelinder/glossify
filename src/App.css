@@ -228,7 +228,7 @@ p {
   background: #112D54;
   border-radius: 20px;
   padding: 32px;
-  /* box-shadow removed */
+
   backdrop-filter: blur(10px);
   animation: fadeIn 0.5s ease;
 }
