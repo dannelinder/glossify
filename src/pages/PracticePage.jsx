@@ -11,6 +11,7 @@ import verbs from '../data/verbs';
 import { getPepp } from '../utils/getPepp';
 import StreakMessage from '../components/StreakMessage';
 import { loadWordListFromDB } from '../utils/wordListHelpers';
+import { motion } from 'framer-motion';
 
 // Utility: get feedback display duration (test flag aware)
 function getFeedbackDisplayMs(type = 'default') {
@@ -329,7 +330,16 @@ function PracticePage() {
     }}>
       {/* Show which list is active */}
       <div style={{ textAlign: 'center', marginBottom: 0 }}>
-        <h1 className="glossify-header" style={{ marginBottom: 8 }}>{activeLabel}</h1>
+        <motion.h1
+          className="glossify-header"
+          style={{ marginBottom: 8 }}
+          key={activeLabel}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+        >
+          {activeLabel}
+        </motion.h1>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
         {isSessionComplete ? (
