@@ -38,6 +38,7 @@ export default function Auth() {
         
         <form onSubmit={handleSubmit}>
           <input
+            id="email"
             type="email"
             placeholder="Email"
             value={email}
@@ -45,6 +46,7 @@ export default function Auth() {
             required
           />
           <input
+            id="password"
             type="password"
             placeholder="Password"
             value={password}
@@ -56,7 +58,7 @@ export default function Auth() {
           {error && <div className="error-message">{error}</div>}
           {message && <div className="success-message">{message}</div>}
           
-          <button type="submit" className="auth-button">
+          <button id="auth-submit" type="submit" className="auth-button">
             {isSignUp ? 'Sign Up' : 'Sign In'}
           </button>
         </form>

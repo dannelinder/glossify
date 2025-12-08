@@ -32,9 +32,9 @@ test.beforeEach(async ({ page }) => {
     return route.continue();
   });
   await page.goto('http://localhost:3000/');
-  await page.fill('input[type="email"]', TEST_EMAIL);
-  await page.fill('input[type="password"]', TEST_PASSWORD);
-  await page.click('button[type="submit"]');
+  await page.fill('#email', TEST_EMAIL);
+  await page.fill('#password', TEST_PASSWORD);
+  await page.click('#auth-submit');
   const menuAppeared = await waitForElementToAppear(page, '#alla-glosor-btn', 8000);
   expect(menuAppeared).toBeTruthy();
 });

@@ -32,9 +32,9 @@ test.beforeEach(async ({ page }) => {
     return route.continue();
   });
   await page.goto('http://localhost:3000/');
-  await page.fill('input[type="email"]', TEST_EMAIL);
-  await page.fill('input[type="password"]', TEST_PASSWORD);
-  await page.click('button[type="submit"]');
+  await page.fill('#email', TEST_EMAIL);
+  await page.fill('#password', TEST_PASSWORD);
+  await page.click('#auth-submit');
   const menuAppeared = await waitForElementToAppear(page, '#verb-btn', 8000);
   expect(menuAppeared).toBeTruthy();
 });
@@ -191,13 +191,13 @@ test.describe('Verb - Practice functionality', () => {
     }
     const sessionCompleteAppeared = await waitForElementToAppear(page, '#session-complete-title', 8000);
     expect(sessionCompleteAppeared).toBeTruthy();
-    await expect(page.locator('button:has-text("Börja om")')).toBeVisible();
-    await page.click('button:has-text("Börja om")');
+    await expect(page.locator('#borja-om-btn')).toBeVisible();
+    await page.click('#borja-om-btn');
     const flashcardAppeared = await waitForElementToAppear(page, '#flashcard-front', 5000);
     expect(flashcardAppeared).toBeTruthy();
     const firstVerb = Object.keys(wordMap)[0];
     await expect(page.locator('#flashcard-front')).toHaveText(firstVerb);
-    await expect(page.locator('button:has-text("Börja om")')).toHaveCount(0);
+    await expect(page.locator('#borja-om-btn')).toHaveCount(0);
   });
 
   test('should practice only wrong answers when clicking "Öva fel svar"', async ({ page }) => {
@@ -217,8 +217,8 @@ test.describe('Verb - Practice functionality', () => {
     }
     const sessionCompleteAppeared = await waitForElementToAppear(page, '#session-complete-title', 8000);
     expect(sessionCompleteAppeared).toBeTruthy();
-    await expect(page.locator('button:has-text("Öva fel svar")')).toBeVisible();
-    await page.click('button:has-text("Öva fel svar")');
+    await expect(page.locator('#ova-fel-svar-btn')).toBeVisible();
+    await page.click('#ova-fel-svar-btn');
     await expect(page.locator('#flashcard-front')).toHaveText(swedishVerbs[0]);
     await page.fill('#svar', wordMap[swedishVerbs[0]]);
     await page.click('#svara-btn');

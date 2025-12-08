@@ -7,6 +7,7 @@ export default function MainPage() {
   return (
     <div style={{ maxWidth: 700, margin: '0 auto', padding: 24, minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: '#112D54', alignItems: 'center' }}>
       <motion.h1
+        id="glossify-title"
         className="glossify-header"
         aria-label="Glossify header wave"
         style={{ display: 'inline-block' }}

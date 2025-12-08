@@ -32,9 +32,9 @@ test.beforeEach(async ({ page }) => {
     return route.continue();
   });
   await page.goto('http://localhost:3000/');
-  await page.fill('input[type="email"]', TEST_EMAIL);
-  await page.fill('input[type="password"]', TEST_PASSWORD);
-  await page.click('button[type="submit"]');
+  await page.fill('#email', TEST_EMAIL);
+  await page.fill('#password', TEST_PASSWORD);
+  await page.click('#auth-submit');
   const menuAppeared = await waitForElementToAppear(page, '#veckans-glosor-btn', 8000);
   expect(menuAppeared).toBeTruthy();
 });
@@ -54,7 +54,7 @@ test.describe('Veckans glosor - Practice functionality', () => {
     const sessionCompleteAppeared = await waitForElementToAppear(page, '#session-complete-title', 8000);
     expect(sessionCompleteAppeared).toBeTruthy();
     await expect(page.locator('button:has-text("Börja om")')).toBeVisible();
-    await page.click('button:has-text("Börja om")');
+    await page.click('#borja-om-btn');
     const flashcardAppeared = await waitForElementToAppear(page, '#flashcard-front', 5000);
     expect(flashcardAppeared).toBeTruthy();
     const firstWord = wordPairs[0].split(';')[0];

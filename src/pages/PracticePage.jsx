@@ -350,6 +350,7 @@ function PracticePage() {
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center' }}>
               <button
+                id="borja-om-btn"
                 onClick={handleRestart}
                 style={{ width: '100%', fontSize: '1.3rem', padding: '18px 40px', borderRadius: '30px', background: 'rgba(0, 212, 255, 0.15)', color: '#00d4ff', border: '2px solid rgba(0, 212, 255, 0.3)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s ease', textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)' }}
               >
@@ -357,6 +358,7 @@ function PracticePage() {
               </button>
               {wrongPairs && wrongPairs.length > 0 && (
                 <button
+                  id="ova-fel-svar-btn"
                   onClick={() => {
                     handleRetryWrong();
                     setShowSessionComplete(false);
