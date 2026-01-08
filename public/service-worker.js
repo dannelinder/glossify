@@ -53,8 +53,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first strategy for API calls (Supabase)
-  if (event.request.url.includes('supabase')) {
+  // Network-first strategy for API calls (Firebase)
+  if (event.request.url.includes('firestore.googleapis.com') || 
+      event.request.url.includes('identitytoolkit.googleapis.com')) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { doc, getDoc } from 'firebase/firestore';
+import { db, auth } from '../lib/firebase';
 import { useNavigate, useParams } from 'react-router-dom';
 import useFlashcards from '../hooks/useFlashcards';
 import Flashcard from '../components/Flashcard';
@@ -90,19 +91,21 @@ function PracticePage() {
   const direction = 'sv-target'; // or get from settings
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [volume, setVolume] = useState(0.2);
-  // Load user settings from Supabase
+  // Load user settings from Firestore
   useEffect(() => {
     let isMounted = true;
     async function fetchSettings() {
       if (!user) return;
-      const { data, error } = await supabase
-        .from('user_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-      if (isMounted && data) {
-        setSoundEnabled(data.sound_enabled ?? true);
-        setVolume(typeof data.volume === 'number' ? data.volume : 0.2);
+      try {
+        const docRef = doc(db, 'userSettings', user.uid);
+        const docSnap = await getDoc(docRef);
+        if (isMounted && docSnap.exists()) {
+          const data = docSnap.data();
+          setSoundEnabled(data.soundEnabled ?? true);
+          setVolume(typeof data.volume === 'number' ? data.volume : 0.2);
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
       }
     }
     fetchSettings();

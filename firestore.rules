@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Word lists - users can only access their own lists
+    match /wordLists/{userId}_{listName} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // User settings - users can only access their own settings  
+    match /userSettings/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

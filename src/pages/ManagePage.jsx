@@ -11,7 +11,7 @@ export default function ManagePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Load existing data from Supabase
+    // Load existing data from Firestore
     async function loadData() {
       setLoading(true)
       const [weekly, all, verbs] = await Promise.all([
@@ -33,7 +33,7 @@ export default function ManagePage() {
     try {
       setMessage('Sparar...')
       
-      // Save all three lists to Supabase
+      // Save all three lists to Firestore
       const results = await Promise.all([
         weeklyText.trim() ? saveWordListToDB('weeklyWords', weeklyText) : Promise.resolve(true),
         allText.trim() ? saveWordListToDB('allWords', allText) : Promise.resolve(true),

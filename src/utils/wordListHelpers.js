@@ -1,4 +1,13 @@
-import { supabase } from '../lib/supabaseClient'
+import { 
+  collection, 
+  doc, 
+  getDoc, 
+  setDoc, 
+  query, 
+  where, 
+  getDocs 
+} from 'firebase/firestore'
+import { db, auth } from '../lib/firebase'
 
 // Parse semicolon-separated word list
 // Format: svenska;tyska (one per line)
@@ -25,66 +34,48 @@ export function parseWordList(text) {
   return words
 }
 
-// Load word list from Supabase (filtered by authenticated user)
+// Load word list from Firestore (filtered by authenticated user)
 export async function loadWordListFromDB(key) {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = auth.currentUser
     if (!user) return []
 
-    const { data, error } = await supabase
-      .from('word_lists')
-      .select('content')
-      .eq('name', key)
-      .eq('user_id', user.id)
-      .single()
+    const docRef = doc(db, 'wordLists', `${user.uid}_${key}`)
+    const docSnap = await getDoc(docRef)
     
-    if (error) {
-      // If no data found (404), return empty array instead of throwing
-      if (error.code === 'PGRST116') return []
-      throw error
-    }
-    if (data && data.content) {
-      return parseWordList(data.content)
+    if (docSnap.exists()) {
+      const data = docSnap.data()
+      if (data && data.content) {
+        return parseWordList(data.content)
+      }
     }
     return []
   } catch (error) {
-    console.error('Error loading word list from Supabase:', error)
+    console.error('Error loading word list from Firestore:', error)
     return []
   }
 }
 
-// Save word list to Supabase (with user_id)
+// Save word list to Firestore (with user_id)
 export async function saveWordListToDB(key, textContent) {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = auth.currentUser
     if (!user) {
       console.error('No authenticated user')
       return false
     }
 
-
-
-    // Use upsert with the composite unique constraint (name + user_id)
-    const { error } = await supabase
-      .from('word_lists')
-      .upsert({ 
-        name: key, 
-        content: textContent,
-        user_id: user.id,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'name,user_id'
-      })
-    
-    if (error) {
-      console.error('Upsert error:', error)
-      throw error
-    }
-    
+    const docRef = doc(db, 'wordLists', `${user.uid}_${key}`)
+    await setDoc(docRef, {
+      name: key,
+      content: textContent,
+      userId: user.uid,
+      updatedAt: new Date().toISOString()
+    })
 
     return true
   } catch (error) {
-    console.error('Error saving word list to Supabase:', error)
+    console.error('Error saving word list to Firestore:', error)
     return false
   }
 }

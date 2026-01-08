@@ -114,7 +114,7 @@ After deploying to Vercel:
 These ARE included in production and have NO vulnerabilities:
 ```json
 {
-  "@supabase/supabase-js": "^2.84.0",  ✅ Latest
+  "firebase": "^11.0.0",                   ✅ Latest
   "react": "^19.2.0",                   ✅ Latest
   "react-dom": "^19.2.0",               ✅ Latest
   "@testing-library/user-event": "^14.6.1",  ✅ Latest

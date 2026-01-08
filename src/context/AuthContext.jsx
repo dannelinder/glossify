@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from 'firebase/auth'
+import { auth } from '../lib/firebase'
 
 const AuthContext = createContext({})
 
@@ -10,39 +16,40 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check active sessions
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
+    // Listen for auth changes
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user)
       setLoading(false)
     })
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
+    return () => unsubscribe()
   }, [])
 
   const signUp = async (email, password) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-    return { data, error }
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      return { data: { user: userCredential.user }, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
   }
 
   const signIn = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { data, error }
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      return { data: { user: userCredential.user }, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
   }
 
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    return { error }
+  const signOutUser = async () => {
+    try {
+      await signOut(auth)
+      return { error: null }
+    } catch (error) {
+      return { error }
+    }
   }
 
   const value = {
@@ -50,7 +57,7 @@ export function AuthProvider({ children }) {
     loading,
     signUp,
     signIn,
-    signOut,
+    signOut: signOutUser,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -3,7 +3,7 @@
 ## Prerequisites
 - GitHub account
 - Vercel account (free tier is perfect)
-- Supabase project with tables set up
+- Firebase project with Firestore and Authentication set up
 
 ## Step-by-Step Deployment
 
@@ -52,21 +52,25 @@ vercel --prod
 
 ### 3. Set Environment Variables in Vercel
 
-⚠️ **CRITICAL STEP** - Without these, your app won't connect to Supabase!
+⚠️ **CRITICAL STEP** - Without these, your app won't connect to Firebase!
 
 In Vercel Dashboard:
 1. Go to Project Settings → Environment Variables
 2. Add these variables:
 
 ```
-REACT_APP_SUPABASE_URL=https://your-project.supabase.co
-REACT_APP_SUPABASE_ANON_KEY=your-anon-public-key-here
+REACT_APP_FIREBASE_API_KEY=your_api_key_here
+REACT_APP_FIREBASE_AUTH_DOMAIN=glossify-2863a.firebaseapp.com
+REACT_APP_FIREBASE_PROJECT_ID=glossify-2863a
+REACT_APP_FIREBASE_STORAGE_BUCKET=glossify-2863a.appspot.com
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id_here
+REACT_APP_FIREBASE_APP_ID=your_app_id_here
 ```
 
 **Where to find these values:**
-- Login to https://supabase.com
-- Go to Project Settings → API
-- Copy the URL and `anon` public key
+- Login to https://console.firebase.google.com
+- Go to Project Settings → General → Your apps
+- Copy the config values from your web app
 
 3. Set for: **Production, Preview, and Development**
 4. Click "Save"

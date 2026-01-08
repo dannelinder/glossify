@@ -5,7 +5,7 @@ A Progressive Web App (PWA) for learning languages through flashcards. Practice 
 ## Features
 
 - 🎯 **Flashcard Practice** - Learn vocabulary with interactive flashcards
-- 🔐 **User Authentication** - Secure login with Supabase Auth
+- 🔐 **User Authentication** - Secure login with Firebase Auth
 - 💾 **Cloud Sync** - Your word lists sync across all devices
 - ⚙️ **Customizable Settings**:
   - Language selection (English, German, Spanish)
@@ -20,7 +20,7 @@ A Progressive Web App (PWA) for learning languages through flashcards. Practice 
 ### Prerequisites
 
 - Node.js (v14 or higher)
-- Supabase account
+- Firebase account
 
 ### Installation
 
@@ -32,15 +32,18 @@ npm install
 
 3. Create a `.env` file in the root directory:
 ```env
-REACT_APP_SUPABASE_URL=your_supabase_url
-REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
+REACT_APP_FIREBASE_API_KEY=your_api_key_here
+REACT_APP_FIREBASE_AUTH_DOMAIN=glossify-2863a.firebaseapp.com
+REACT_APP_FIREBASE_PROJECT_ID=glossify-2863a
+REACT_APP_FIREBASE_STORAGE_BUCKET=glossify-2863a.appspot.com
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id_here
+REACT_APP_FIREBASE_APP_ID=your_app_id_here
 ```
 
-4. Set up Supabase database by running these SQL scripts in order:
-   - `supabase-auth-setup.sql` - Authentication tables and RLS
-   - `supabase-settings-setup.sql` - User settings table
-   - `supabase-direction-migration.sql` - Direction column
-   - `supabase-case-sensitive-migration.sql` - Case sensitivity column
+4. Set up Firebase:
+   - Enable Authentication (Email/Password)
+   - Create Firestore Database
+   - Set up security rules (see below)
 
 5. Start the development server:
 ```bash
@@ -81,25 +84,30 @@ The app uses a service worker to cache assets for offline use:
 
 ## Database Schema
 
-### `word_lists` table
-- `id` - UUID primary key
-- `user_id` - UUID foreign key to auth.users
-- `name` - Text (weeklyWords, allWords, verbs)
-- `words` - JSONB array of {sv, ty} objects
-- `created_at`, `updated_at` - Timestamps
+### Firestore Collections
 
-### `user_settings` table
-- `user_id` - UUID primary key, foreign key to auth.users
-- `target_language` - Text (en, de, es)
-- `direction` - Text (sv-target, target-sv)
-- `sound_enabled` - Boolean
-- `case_sensitive` - Boolean
-- `updated_at` - Timestamp
+**`wordLists` collection**
+- Document ID: `{userId}_{listName}`
+- Fields:
+  - `name` - String (weeklyWords, allWords, verbs)
+  - `content` - String (semicolon-separated word pairs)
+  - `userId` - String (Firebase Auth user ID)
+  - `updatedAt` - Timestamp
+
+**`userSettings` collection**
+- Document ID: `{userId}`
+- Fields:
+  - `targetLanguage` - String (en, de, es)
+  - `direction` - String (sv-target, target-sv)
+  - `soundEnabled` - Boolean
+  - `caseSensitive` - Boolean
+  - `volume` - Number
+  - `updatedAt` - Timestamp
 
 ## Technologies
 
 - **React 19** - UI framework
-- **Supabase** - Backend (Auth + PostgreSQL)
+- **Firebase** - Backend (Auth + Firestore)
 - **Service Workers** - Offline support
 - **Web Audio API** - Sound effects
 - **CSS3** - Animations and gradients
