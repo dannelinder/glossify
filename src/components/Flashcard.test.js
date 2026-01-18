@@ -65,10 +65,10 @@ describe('Flashcard Component', () => {
     );
     
     const input = screen.getByPlaceholderText('Skriv ditt svar här...');
-    const form = input.closest('form');
+    const submitButton = screen.getByRole('button', { name: /svara/i });
     
     fireEvent.change(input, { target: { value: 'Hello' } });
-    fireEvent.submit(form);
+    fireEvent.click(submitButton);
     
     expect(mockOnSubmit).toHaveBeenCalledWith('Hello', null);
   });
@@ -147,10 +147,10 @@ describe('Flashcard Component', () => {
       );
       
       const input = screen.getByPlaceholderText('Skriv bara verbet...');
-      const form = input.closest('form');
+      const submitButton = screen.getByRole('button', { name: /svara/i });
       
       fireEvent.change(input, { target: { value: 'schlafe' } });
-      fireEvent.submit(form);
+      fireEvent.click(submitButton);
       
       expect(mockOnSubmit).toHaveBeenCalledWith('schlafe', expect.objectContaining({
         question: 'jag sover',
