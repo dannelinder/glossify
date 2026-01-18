@@ -74,7 +74,7 @@ const streakPhrases = {
 function getPepp(streak) {
   // Only trigger on defined milestones
   if (streakMilestones.includes(streak)) {
-    const isTest = typeof process !== 'undefined' && (process.env.NODE_ENV === 'test' || typeof window !== 'undefined' && window.__TEST_MODE__);
+    const isTest = typeof process !== 'undefined' && (process.env.NODE_ENV === 'test' || (typeof window !== 'undefined' && window.__TEST_MODE__));
     const phrases = streakPhrases[streak] || [];
     let milestoneMsg, peppMsg;
     if (isTest) {

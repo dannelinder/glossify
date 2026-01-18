@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
-import { db, auth } from '../lib/firebase';
+import { db } from '../lib/firebase';
 import { useNavigate, useParams } from 'react-router-dom';
 import useFlashcards from '../hooks/useFlashcards';
 import Flashcard from '../components/Flashcard';
@@ -79,8 +79,8 @@ function playSound(name, soundEnabled = true, volume = 1) {
 function PracticePage() {
   const navigate = useNavigate();
   const { list } = useParams();
-  const { user, signOut } = useAuth();
-  const [activeList, setActiveList] = useState(list || 'weekly');
+  const { user } = useAuth();
+  const [activeList] = useState(list || 'weekly');
   const [hasStarted, setHasStarted] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [peppMessage, setPeppMessage] = useState('');
@@ -318,7 +318,7 @@ function PracticePage() {
       loadWords(copy);
       pendingRestart.current = false;
     }
-  }, [showSessionComplete, loadWords, activeList, allWords, verbs, weeklyWords]);
+  }, [showSessionComplete, loadWords, activeList]);
 
   return (
     <div style={{

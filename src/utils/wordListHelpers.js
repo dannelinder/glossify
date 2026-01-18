@@ -1,11 +1,7 @@
 import { 
-  collection, 
   doc, 
   getDoc, 
-  setDoc, 
-  query, 
-  where, 
-  getDocs 
+  setDoc
 } from 'firebase/firestore'
 import { db, auth } from '../lib/firebase'
 
