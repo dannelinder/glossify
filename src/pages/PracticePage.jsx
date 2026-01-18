@@ -148,6 +148,8 @@ function PracticePage() {
     totalAnswered,
     streak,
     wrongPairs,
+    isRetrySession,
+    originalSessionStats,
     loadWords,
     answerCurrent,
     goToNextWord,
@@ -163,17 +165,8 @@ function PracticePage() {
   // Stateless retry: use wrongPairs directly for retry button and logic
   function handleRetryWrong() {
     if (wrongPairs && wrongPairs.length > 0) {
-      // Sort wrongPairs according to the original word order for deterministic retry
-      let originalOrder = [];
-      if (activeList === 'all') originalOrder = allWords;
-      else if (activeList === 'verbs') originalOrder = verbs;
-      else originalOrder = weeklyWords;
-      // Map to string key for comparison
-      const wrongSet = new Set(wrongPairs.map(([sv, ty]) => `${sv};${ty}`));
-      const sortedWrongPairs = originalOrder
-        .map(({ sv, ty }) => [sv, ty])
-        .filter(([sv, ty]) => wrongSet.has(`${sv};${ty}`));
-      resetToWrong(sortedWrongPairs);
+      // Just use wrongPairs directly without complex sorting - they're already stored correctly
+      resetToWrong(wrongPairs);
       setHasStarted(true);
       setListLoaded(true);
       setFeedback('');
@@ -210,7 +203,7 @@ function PracticePage() {
 
 
 
-  function handleSubmit(answer) {
+  function handleSubmit(answer, partialPromptInfo) {
     answerCurrent(
       answer,
       normalizeAnswer,
@@ -228,13 +221,20 @@ function PracticePage() {
         } else {
           playSound('error', soundEnabled, volume);
           setPeppMessage('');
-          const correctAnswer = direction === 'sv-target' ? card.ty : card.sv;
+          let correctAnswer;
+          if (partialPromptInfo) {
+            // For verb mode, show the full answer in feedback
+            correctAnswer = partialPromptInfo.fullAnswer;
+          } else {
+            correctAnswer = direction === 'sv-target' ? card.ty : card.sv;
+          }
           setFeedback(`✗ Fel, rätta svaret var "${correctAnswer}"`);
         }
         setPendingNext(true);
       },
       undefined,
-      direction
+      direction,
+      partialPromptInfo // Pass partial prompt info for custom validation
     );
   }
 
@@ -347,9 +347,20 @@ function PracticePage() {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
         {isSessionComplete ? (
           <div className="card" style={{ textAlign: 'center', color: '#00d4ff' }}>
-            <h2 id="session-complete-title" style={{ fontSize: '2.8rem', marginBottom: 24 }}>Övningen klar!</h2>
+            <h2 id="session-complete-title" style={{ fontSize: '2.8rem', marginBottom: 24 }}>
+              {isRetrySession ? 'Upprepning klar!' : 'Övningen klar!'}
+            </h2>
             <p style={{ fontSize: '1.4rem', marginBottom: 36, color: '#0099cc' }}>
-              Du fick {score} av {totalAnswered} rätt!
+              {isRetrySession ? (
+                <>
+                  Du fick {score} av {totalAnswered} rätt på fel svar!<br />
+                  <span style={{ fontSize: '1.1rem', opacity: 0.8 }}>
+                    (Ursprunglig session: {originalSessionStats?.correctAnswers} av {originalSessionStats?.totalQuestions} rätt)
+                  </span>
+                </>
+              ) : (
+                `Du fick ${score} av ${totalAnswered} rätt!`
+              )}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center' }}>
               <button
@@ -363,8 +374,8 @@ function PracticePage() {
                 <button
                   id="ova-fel-svar-btn"
                   onClick={() => {
-                    handleRetryWrong();
                     setShowSessionComplete(false);
+                    handleRetryWrong();
                   }}
                   style={{ width: '100%', fontSize: '1.3rem', padding: '18px 40px', borderRadius: '30px', background: 'rgba(0, 212, 255, 0.15)', color: '#00d4ff', border: '2px solid rgba(0, 212, 255, 0.3)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s ease', textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)' }}
                 >
@@ -377,7 +388,13 @@ function PracticePage() {
         ) : (
           <div style={{ width: '100%', maxWidth: 600 }}>
             {/* Main session content: Flashcard always at top */}
-            <Flashcard current={current} onSubmit={handleSubmit} normalize={normalizeAnswer} direction={direction} />
+            <Flashcard 
+              current={current} 
+              onSubmit={handleSubmit} 
+              normalize={normalizeAnswer} 
+              direction={direction} 
+              isVerbMode={activeList === 'verbs'}
+            />
             {/* Always render feedback if present, even with pepp/streak */}
             {feedback && (
               <div

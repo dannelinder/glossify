@@ -160,4 +160,113 @@ describe('useFlashcards Hook', () => {
       expect(result.current.totalAnswered).toBe(0);
     }, 10);
   });
+
+  describe('Retry Session Functionality', () => {
+    test('tracks retry session state and original stats', () => {
+      const { result } = renderHook(() => useFlashcards([], 0));
+      
+      act(() => {
+        result.current.loadWords(testWords);
+      });
+      
+      // Answer some cards to build original stats
+      act(() => {
+        result.current.answerCurrent('Hello', mockNormalize, () => {}, 0, 'sv-target'); // correct
+      });
+      
+      setTimeout(() => {
+        act(() => {
+          result.current.answerCurrent('Wrong', mockNormalize, () => {}, 0, 'sv-target'); // wrong
+        });
+        
+        setTimeout(() => {
+          const originalScore = result.current.score;
+          const originalTotal = result.current.totalAnswered;
+          
+          // Reset to wrong answers
+          act(() => {
+            result.current.resetToWrong();
+          });
+          
+          // Should now be in retry session
+          expect(result.current.isRetrySession).toBe(true);
+          expect(result.current.originalSessionStats).toEqual({
+            score: originalScore,
+            total: originalTotal
+          });
+          
+          // Score should reset but original stats preserved
+          expect(result.current.score).toBe(0);
+          expect(result.current.totalAnswered).toBe(0);
+        }, 10);
+      }, 10);
+    });
+
+    test('maintains retry session state during retry practice', () => {
+      const { result } = renderHook(() => useFlashcards([], 0));
+      
+      act(() => {
+        result.current.loadWords(testWords);
+      });
+      
+      // Get wrong answers
+      act(() => {
+        result.current.answerCurrent('Wrong1', mockNormalize, () => {}, 0, 'sv-target');
+      });
+      
+      setTimeout(() => {
+        act(() => {
+          result.current.answerCurrent('Wrong2', mockNormalize, () => {}, 0, 'sv-target');
+        });
+        
+        setTimeout(() => {
+          // Reset to retry wrong answers
+          act(() => {
+            result.current.resetToWrong();
+          });
+          
+          expect(result.current.isRetrySession).toBe(true);
+          
+          // Answer during retry session
+          const correctAnswer = result.current.current.ty;
+          act(() => {
+            result.current.answerCurrent(correctAnswer, mockNormalize, () => {}, 0, 'sv-target');
+          });
+          
+          // Should still be in retry session
+          expect(result.current.isRetrySession).toBe(true);
+          expect(result.current.originalSessionStats).toBeTruthy();
+        }, 10);
+      }, 10);
+    });
+
+    test('resets retry session when loading new words', () => {
+      const { result } = renderHook(() => useFlashcards([], 0));
+      
+      act(() => {
+        result.current.loadWords(testWords);
+      });
+      
+      // Get into retry session state
+      act(() => {
+        result.current.answerCurrent('Wrong', mockNormalize, () => {}, 0, 'sv-target');
+      });
+      
+      setTimeout(() => {
+        act(() => {
+          result.current.resetToWrong();
+        });
+        
+        expect(result.current.isRetrySession).toBe(true);
+        
+        // Load new words should reset retry state
+        act(() => {
+          result.current.loadWords([{ sv: 'Ny', ty: 'New' }]);
+        });
+        
+        expect(result.current.isRetrySession).toBe(false);
+        expect(result.current.originalSessionStats).toBeNull();
+      }, 10);
+    });
+  });
 });

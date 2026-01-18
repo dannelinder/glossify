@@ -21,12 +21,15 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:ci": "react-scripts test --coverage --watchAll=false --passWithNoTests",
+    "test:unit": "react-scripts test --watchAll=false",
     "test:coverage": "react-scripts test --coverage --watchAll=false",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:headed": "playwright test --headed", 
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:report": "playwright show-report",
+    "test:all": "npm run test:unit && npm run test:e2e",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

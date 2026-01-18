@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
+import { getPartialPromptInfo } from '../utils/pronounHelper'
 
 
-export default function Flashcard({ current, onSubmit, normalize, direction = 'sv-target' }) {
+export default function Flashcard({ current, onSubmit, normalize, direction = 'sv-target', isVerbMode = false }) {
 const [input, setInput] = useState('')
 
 
@@ -12,14 +13,26 @@ setInput('')
 
 if (!current) return null
 
-// Determine which property to show based on direction
-const question = direction === 'sv-target' ? current.sv : current.ty
+// Check if we should use partial prompts for verb practice
+const partialPromptInfo = isVerbMode ? getPartialPromptInfo(current, direction) : null
+
+// Determine which property to show based on direction and verb mode
+let question, displayPrompt
+if (partialPromptInfo) {
+  question = partialPromptInfo.question
+  displayPrompt = partialPromptInfo.prompt
+} else {
+  question = direction === 'sv-target' ? current.sv : current.ty
+  displayPrompt = question
+}
+
 const answer = direction === 'sv-target' ? current.ty : current.sv
 
 
 function handleSubmit(e) {
 e.preventDefault()
-onSubmit(input)
+// Pass the partial prompt info along with the answer for proper validation
+onSubmit(input, partialPromptInfo)
 }
 
 
@@ -37,13 +50,27 @@ return (
   >
     {question}
   </div>
+  {partialPromptInfo && (
+    <div
+      id="flashcard-prompt"
+      style={{ 
+        fontSize: '1.8rem', 
+        marginBottom: 16, 
+        fontWeight: '600',
+        color: '#0099cc',
+        fontStyle: 'italic'
+      }}
+    >
+      {displayPrompt}
+    </div>
+  )}
   <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
     <input
       id="svar"
       autoFocus
       value={input}
       onChange={(e) => setInput(e.target.value)}
-      placeholder="Skriv ditt svar här..."
+      placeholder={isVerbMode && !partialPromptInfo ? "Skriv verbet..." : partialPromptInfo ? "Skriv bara verbet..." : "Skriv ditt svar här..."}
       style={{
         fontSize: '1.3rem',
         padding: '18px 40px',

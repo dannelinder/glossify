@@ -21,10 +21,18 @@ export default function useFlashcards(initialDeck = [], delayMs = 500, determini
   const [remainingWrongs, setRemainingWrongs] = useState([]);
   const [lastMistakes, setLastMistakes] = useState([]);
   const [streak, setStreak] = useState(0);
+  const [isRetrySession, setIsRetrySession] = useState(false);
+  const [originalSessionStats, setOriginalSessionStats] = useState(null);
 
   // When session ends (current becomes null), update remainingWrongs with new mistakes
     React.useEffect(() => {
-      if (current === null) {
+      if (current === null && !isRetrySession) {
+        // Store original session stats before showing retry options
+        setOriginalSessionStats({
+          totalQuestions: queue.length,
+          correctAnswers: score,
+          totalAnswered: totalAnswered
+        });
         setLastMistakes(wrongPairs);
         if (wrongPairs.length > 0) {
           setRemainingWrongs(wrongPairs);
@@ -32,7 +40,7 @@ export default function useFlashcards(initialDeck = [], delayMs = 500, determini
           setRemainingWrongs([]);
         }
       }
-    }, [current, wrongPairs]);
+    }, [current, wrongPairs, isRetrySession, queue.length, score, totalAnswered]);
 
   const loadWords = useCallback((words) => {
     let arr;
@@ -55,6 +63,8 @@ export default function useFlashcards(initialDeck = [], delayMs = 500, determini
     setWrongPairs([]);
     setRemainingWrongs([]);
     setStreak(0);
+    setIsRetrySession(false);
+    setOriginalSessionStats(null);
   }, [deterministicOrder]);
 
   // Accepts a list of pairs to retry, for stateless retry logic
@@ -63,10 +73,12 @@ export default function useFlashcards(initialDeck = [], delayMs = 500, determini
     // Convert [sv, ty] pairs back to {sv, ty} objects
     const retryQueue = wrongList.map(([sv, ty]) => ({ sv, ty }));
     setQueue(retryQueue);
+    setIndex(0); // Reset index to 0 for retry session
     setCurrent(retryQueue[0] || null);
     setScore(0);
     setTotalAnswered(0);
     setStreak(0);
+    setIsRetrySession(true);
     // Clear wrongPairs BEFORE retry round starts
     setWrongPairs([]);
     setRemainingWrongs([]);
@@ -81,11 +93,19 @@ export default function useFlashcards(initialDeck = [], delayMs = 500, determini
   }, [queue.length, current, wrongPairs]);
 
 
-const answerCurrent = useCallback((userAnswer, normalizeFn, onResult, customDelay, direction = 'sv-target') => {
+const answerCurrent = useCallback((userAnswer, normalizeFn, onResult, customDelay, direction = 'sv-target', partialPromptInfo = null) => {
   if (!current) return;
-  // Determine which property to check based on direction
-  const correctAnswer = direction === 'sv-target' ? current.ty : current.sv;
-  const correct = normalizeFn(userAnswer) === normalizeFn(correctAnswer);
+  
+  let correct;
+  if (partialPromptInfo) {
+    // For partial prompts, compare against the expected verb part only
+    correct = normalizeFn(userAnswer) === normalizeFn(partialPromptInfo.expectedAnswer);
+  } else {
+    // Normal full answer comparison
+    const correctAnswer = direction === 'sv-target' ? current.ty : current.sv;
+    correct = normalizeFn(userAnswer) === normalizeFn(correctAnswer);
+  }
+  
   setTotalAnswered((t) => t + 1);
   if (correct) {
     setScore((s) => s + 1);
@@ -95,6 +115,7 @@ const answerCurrent = useCallback((userAnswer, normalizeFn, onResult, customDela
       return newStreak;
     });
   } else {
+    // Always store the original full answer pairs, not partial answers
     setWrongPairs((w) => [...w, [current.sv, current.ty]]);
     // Always reset streak to 0 on wrong answer, never increment
     setStreak((st) => {
@@ -103,7 +124,7 @@ const answerCurrent = useCallback((userAnswer, normalizeFn, onResult, customDela
     });
   }
   // Do not advance to next word here; UI will call goToNextWord
-}, [current, queue])
+}, [current])
 
 const goToNextWord = useCallback(() => {
   setIndex((i) => {
@@ -126,13 +147,15 @@ const hasMore = current !== null
     queue,
     current,
     index,
-    hasMore,
+    hasMore: current !== null,
     totalAnswered,
     score,
     wrongPairs,
     remainingWrongs,
     lastMistakes,
     streak,
+    isRetrySession,
+    originalSessionStats,
     loadWords,
     answerCurrent,
     goToNextWord,
