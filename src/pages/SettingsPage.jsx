@@ -20,6 +20,7 @@ export default function SettingsPage() {
   const [volume, setVolume] = useState(0.2) // 0.2 = 20%
   const [caseSensitive, setCaseSensitive] = useState(true)
   const [avatarUrl, setAvatarUrl] = useState('');
+  // eslint-disable-next-line no-unused-vars
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)

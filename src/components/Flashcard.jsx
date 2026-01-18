@@ -26,9 +26,6 @@ if (partialPromptInfo) {
   displayPrompt = question
 }
 
-const answer = direction === 'sv-target' ? current.ty : current.sv
-
-
 function handleSubmit(e) {
 e.preventDefault()
 // Pass the partial prompt info along with the answer for proper validation

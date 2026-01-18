@@ -139,9 +139,6 @@ const goToNextWord = useCallback(() => {
 }, [queue]);
 
 
-const hasMore = current !== null
-
-
   return {
     deck,
     queue,
