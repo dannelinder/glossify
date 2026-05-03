@@ -295,7 +295,7 @@ function PracticePage() {
     weekly: 'Veckans glosor',
     all: 'Alla glosor',
     verbs: 'Verb',
-    questions: 'Frågeord'
+    questions: 'Fyll i luckan'
   };
   let activeLabel;
   if (listLabelMap[activeList]) {

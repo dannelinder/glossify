@@ -42,7 +42,7 @@ export default function MainPage() {
           Verb
         </button>
         <button id="fragor-btn" className="modern-button main-action-button" onClick={() => navigate('/practice/questions')}>
-          Frågeord
+          Fyll i luckan
         </button>
         <button id="hantera-glosor-btn" className="modern-button main-action-button" onClick={() => navigate('/manage')}>
           Hantera glosor

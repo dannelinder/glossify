@@ -110,7 +110,7 @@ export default function ManagePage() {
         </div>
 
         <div className="manage-section">
-          <h3>Frågeord</h3>
+          <h3>Fyll i luckan</h3>
           <p className="manage-description" style={{ marginTop: 0 }}>
             Format: <code className="example-code">mening med ___;svar;facit-mening</code> (facit-mening är valfri)
           </p>
