@@ -71,7 +71,9 @@ test.describe('Veckans glosor - Practice functionality', () => {
     // Answer first word wrong, rest correct
     await page.fill('#svar', 'fel');
     await page.click('#svara-btn');
-    await page.waitForTimeout(1000);
+    // Wrong answer pauses with a Nästa button; click it to continue
+    await waitForElementToAppear(page, '#nasta-btn', 4000);
+    await page.click('#nasta-btn');
     for (let i = 1; i < swedishWords.length; i++) {
       await page.fill('#svar', wordMap[swedishWords[i]]);
       await page.click('#svara-btn');
@@ -165,6 +167,9 @@ test.describe('Veckans glosor - Practice functionality', () => {
       console.log('INCORRECT FEEDBACK TEST: .feedback-error not found or text mismatch. Page HTML:', html);
     }
     expect(feedbackAppeared).toBeTruthy();
+    // Wrong answer pauses; click Nästa to advance to the next word
+    await waitForElementToAppear(page, '#nasta-btn', 4000);
+    await page.click('#nasta-btn');
     let tries = 0;
     while (tries < 20) {
       await page.waitForTimeout(100);

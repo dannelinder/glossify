@@ -123,6 +123,9 @@ test.describe('Verb - Practice functionality', () => {
       console.log('INCORRECT FEEDBACK TEST: .feedback-error not found or text mismatch. Page HTML:', html);
     }
     expect(feedbackAppeared).toBeTruthy();
+    // Wrong answer pauses; click Nästa to advance to the next verb
+    await waitForElementToAppear(page, '#nasta-btn', 4000);
+    await page.click('#nasta-btn');
     // Wait for the flashcard to update (new verb or feedback disappears)
     let tries = 0;
     while (tries < 20) {
@@ -207,7 +210,9 @@ test.describe('Verb - Practice functionality', () => {
     await expect(page.locator('button:has-text("Öva fel svar")')).toHaveCount(0);
     await page.fill('#svar', 'fel');
     await page.click('#svara-btn');
-    await page.waitForTimeout(1000);
+    // Wrong answer pauses with a Nästa button; click it to continue
+    await waitForElementToAppear(page, '#nasta-btn', 4000);
+    await page.click('#nasta-btn');
     for (let i = 1; i < swedishVerbs.length; i++) {
       await page.fill('#svar', wordMap[swedishVerbs[i]]);
       await page.click('#svara-btn');

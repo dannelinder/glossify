@@ -239,16 +239,19 @@ function PracticePage() {
   }
 
 
-  // Clear feedback and pepp after a delay, then advance
+  // Clear feedback and pepp after a delay, then advance.
+  // On wrong answer, do NOT auto-advance — wait for the user to click "Nästa".
   useEffect(() => {
     if (pendingNext) {
+      // Wrong answer: pause and let the user proceed manually.
+      if (feedback.startsWith('✗')) {
+        return;
+      }
       let feedbackType = 'default';
       if (peppMessage) {
         feedbackType = 'pepp';
       } else if (feedback.startsWith('✓')) {
         feedbackType = 'success';
-      } else if (feedback.startsWith('✗')) {
-        feedbackType = 'error';
       }
       const displayMs = getFeedbackDisplayMs(feedbackType);
       // Always use getFeedbackDisplayMs for all feedback durations
@@ -261,6 +264,13 @@ function PracticePage() {
       return () => clearTimeout(timer);
     }
   }, [pendingNext, goToNextWord, feedback, peppMessage, queue.length]);
+
+  function handleNext() {
+    setFeedback('');
+    setPeppMessage('');
+    goToNextWord();
+    setPendingNext(false);
+  }
 
   // When current becomes null (end of session), always show end-of-list options
   useEffect(() => {
@@ -403,6 +413,31 @@ function PracticePage() {
                 style={{ marginTop: 20, textAlign: 'center' }}
               >
                 {feedback}
+              </div>
+            )}
+            {/* Show "Nästa" button after a wrong answer so the user can continue at their own pace */}
+            {pendingNext && feedback.startsWith('✗') && (
+              <div style={{ marginTop: 16, textAlign: 'center' }}>
+                <button
+                  id="nasta-btn"
+                  onClick={handleNext}
+                  autoFocus
+                  style={{
+                    width: '100%',
+                    fontSize: '1.3rem',
+                    padding: '18px 40px',
+                    borderRadius: '30px',
+                    background: 'rgba(0, 212, 255, 0.15)',
+                    color: '#00d4ff',
+                    border: '2px solid rgba(0, 212, 255, 0.3)',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                  }}
+                >
+                  Nästa →
+                </button>
               </div>
             )}
             {peppMessage && (
