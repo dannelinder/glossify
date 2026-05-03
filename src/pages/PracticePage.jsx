@@ -9,6 +9,7 @@ import weeklyWords from '../data/weeklyWords';
 import allWords from '../data/allWords';
 import { useAuth } from '../context/AuthContext';
 import verbs from '../data/verbs';
+import questionWords from '../data/questionWords';
 import { getPepp } from '../utils/getPepp';
 import StreakMessage from '../components/StreakMessage';
 import { loadWordListFromDB } from '../utils/wordListHelpers';
@@ -121,11 +122,13 @@ function PracticePage() {
     let key = 'weeklyWords';
     if (listName === 'all') key = 'allWords';
     if (listName === 'verbs') key = 'verbs';
+    if (listName === 'questions') key = 'questionWords';
     return loadWordListFromDB(key).then((words) => {
       let result;
       if (!words || words.length === 0) {
         if (listName === 'all') result = allWords;
         else if (listName === 'verbs') result = verbs;
+        else if (listName === 'questions') result = questionWords;
         else result = weeklyWords;
       } else {
         result = words;
@@ -134,6 +137,7 @@ function PracticePage() {
       if (deterministicOrder) {
         if (listName === 'all') return allWords;
         if (listName === 'verbs') return verbs;
+        if (listName === 'questions') return questionWords;
         return weeklyWords;
       }
       // If not deterministic, shuffle (if you have a shuffle util, use it here)
@@ -228,7 +232,11 @@ function PracticePage() {
           } else {
             correctAnswer = direction === 'sv-target' ? card.ty : card.sv;
           }
-          setFeedback(`✗ Fel, rätta svaret var "${correctAnswer}"`);
+          let msg = `✗ Fel, rätta svaret var "${correctAnswer}"`;
+          if (card.context) {
+            msg += ` — ${card.context}`;
+          }
+          setFeedback(msg);
         }
         setPendingNext(true);
       },
@@ -286,7 +294,8 @@ function PracticePage() {
   const listLabelMap = {
     weekly: 'Veckans glosor',
     all: 'Alla glosor',
-    verbs: 'Verb'
+    verbs: 'Verb',
+    questions: 'Frågeord'
   };
   let activeLabel;
   if (listLabelMap[activeList]) {
@@ -317,6 +326,7 @@ function PracticePage() {
       let sourceList = weeklyWords;
       if (activeList === 'all') sourceList = allWords;
       else if (activeList === 'verbs') sourceList = verbs;
+      else if (activeList === 'questions') sourceList = questionWords;
       const copy = JSON.parse(JSON.stringify(sourceList));
       if (Array.isArray(copy)) {
 
@@ -404,6 +414,7 @@ function PracticePage() {
               normalize={normalizeAnswer} 
               direction={direction} 
               isVerbMode={activeList === 'verbs'}
+              isQuestionMode={activeList === 'questions'}
             />
             {/* Always render feedback if present, even with pepp/streak */}
             {feedback && (

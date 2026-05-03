@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { getPartialPromptInfo } from '../utils/pronounHelper'
 
 
-export default function Flashcard({ current, onSubmit, normalize, direction = 'sv-target', isVerbMode = false }) {
+export default function Flashcard({ current, onSubmit, normalize, direction = 'sv-target', isVerbMode = false, isQuestionMode = false }) {
 const [input, setInput] = useState('')
 
 
@@ -67,7 +67,7 @@ return (
       autoFocus
       value={input}
       onChange={(e) => setInput(e.target.value)}
-      placeholder={isVerbMode && !partialPromptInfo ? "Skriv verbet..." : partialPromptInfo ? "Skriv bara verbet..." : "Skriv ditt svar här..."}
+      placeholder={isQuestionMode ? "Fyll i ordet som saknas..." : isVerbMode && !partialPromptInfo ? "Skriv verbet..." : partialPromptInfo ? "Skriv bara verbet..." : "Skriv ditt svar här..."}
       style={{
         fontSize: '1.3rem',
         padding: '18px 40px',

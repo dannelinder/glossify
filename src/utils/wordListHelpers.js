@@ -20,10 +20,15 @@ export function parseWordList(text) {
     
     const parts = line.split(';')
     if (parts.length >= 2) {
-      words.push({
+      const word = {
         sv: parts[0].trim(),
         ty: parts[1].trim()
-      })
+      }
+      // Optional third column used by question-words list as a context/hint sentence
+      if (parts.length >= 3 && parts[2].trim()) {
+        word.context = parts[2].trim()
+      }
+      words.push(word)
     }
   }
   

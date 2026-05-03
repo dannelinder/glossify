@@ -7,6 +7,7 @@ export default function ManagePage() {
   const [weeklyText, setWeeklyText] = useState('')
   const [allText, setAllText] = useState('')
   const [verbsText, setVerbsText] = useState('')
+  const [questionsText, setQuestionsText] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -14,16 +15,18 @@ export default function ManagePage() {
     // Load existing data from Firestore
     async function loadData() {
       setLoading(true)
-      const [weekly, all, verbs] = await Promise.all([
+      const [weekly, all, verbs, questions] = await Promise.all([
         loadWordListFromDB('weeklyWords'),
         loadWordListFromDB('allWords'),
-        loadWordListFromDB('verbs')
+        loadWordListFromDB('verbs'),
+        loadWordListFromDB('questionWords')
       ])
       
       // Convert back to text format
       if (weekly.length) setWeeklyText(weekly.map(w => `${w.sv};${w.ty}`).join('\n'))
       if (all.length) setAllText(all.map(w => `${w.sv};${w.ty}`).join('\n'))
       if (verbs.length) setVerbsText(verbs.map(w => `${w.sv};${w.ty}`).join('\n'))
+      if (questions.length) setQuestionsText(questions.map(w => `${w.sv};${w.ty}${w.context ? ';' + w.context : ''}`).join('\n'))
       setLoading(false)
     }
     loadData()
@@ -37,7 +40,8 @@ export default function ManagePage() {
       const results = await Promise.all([
         weeklyText.trim() ? saveWordListToDB('weeklyWords', weeklyText) : Promise.resolve(true),
         allText.trim() ? saveWordListToDB('allWords', allText) : Promise.resolve(true),
-        verbsText.trim() ? saveWordListToDB('verbs', verbsText) : Promise.resolve(true)
+        verbsText.trim() ? saveWordListToDB('verbs', verbsText) : Promise.resolve(true),
+        questionsText.trim() ? saveWordListToDB('questionWords', questionsText) : Promise.resolve(true)
       ])
       
       if (results.every(r => r)) {
@@ -102,6 +106,20 @@ export default function ManagePage() {
               value={verbsText}
               onChange={(e) => setVerbsText(e.target.value)}
               placeholder="springa;laufen"
+            />
+        </div>
+
+        <div className="manage-section">
+          <h3>Frågeord</h3>
+          <p className="manage-description" style={{ marginTop: 0 }}>
+            Format: <code className="example-code">mening med ___;svar;facit-mening</code> (facit-mening är valfri)
+          </p>
+            <textarea
+              id="questions-textarea"
+              className="main-textarea"
+              value={questionsText}
+              onChange={(e) => setQuestionsText(e.target.value)}
+              placeholder="___ liegt Hamburg?;Wo;Hamburg liegt in Deutschland."
             />
         </div>
 
